@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /founder
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /privacy
+
+Sitemap: https://adzenmedia.com/sitemap.xml

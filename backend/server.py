@@ -1,116 +1,137 @@
 import asyncio
-from contextlib import suppress
-from fastapi import FastAPI, APIRouter, Query
-from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo import ASCENDING, DESCENDING, IndexModel
-import os
 import logging
-from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
 import uuid
-from datetime import datetime, timezone
+from contextlib import suppress
+from datetime import date, timedelta
 
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from pymongo import ASCENDING, DESCENDING, IndexModel
+from starlette.middleware.cors import CORSMiddleware
 
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+from core import client, db, env, env_bool, iso
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+import admin
+import auth_admin
+import leads
+import voice
+from clerk_auth import clerk_router
+from content import public_case_studies
+from notify import email_worker
 
-# One entry per collection: every field a route filters, sorts or dedupes on. Add the index in the same edit as the query.
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
 INDEXES: dict[str, list[IndexModel]] = {
-    "status_checks": [
+    "leads": [
         IndexModel([("id", ASCENDING)], name="id", unique=True),
-        IndexModel([("timestamp", DESCENDING)], name="timestamp_desc"),
+        IndexModel([("reference", ASCENDING)], name="reference", unique=True),
+        IndexModel([("idempotency_key", ASCENDING)], name="idempotency_key", unique=True,
+                   partialFilterExpression={"idempotency_key": {"$type": "string"}}),
+        IndexModel([("created_at", DESCENDING)], name="created_desc"),
+        IndexModel([("contact.email_lc", ASCENDING)], name="email_lc"),
+        IndexModel([("contact_group_id", ASCENDING)], name="group"),
+        IndexModel([("stage", ASCENDING), ("follow_up_date", ASCENDING)], name="stage_follow"),
     ],
+    "email_outbox": [
+        IndexModel([("key", ASCENDING)], name="key", unique=True),
+        IndexModel([("status", ASCENDING), ("next_attempt_at", ASCENDING)], name="status_next"),
+        IndexModel([("lead_id", ASCENDING)], name="lead_id"),
+    ],
+    "webhook_events": [IndexModel([("event_key", ASCENDING)], name="event_key", unique=True)],
+    "voice_calls": [IndexModel([("call_id", ASCENDING)], name="call_id", unique=True)],
+    "rate_limits": [IndexModel([("key", ASCENDING)], name="key", unique=True),
+                    IndexModel([("expires_at", ASCENDING)], name="ttl", expireAfterSeconds=0)],
+    "events": [IndexModel([("type", ASCENDING), ("channel", ASCENDING)], name="type_channel")],
+    "users": [IndexModel([("user_id", ASCENDING)], name="user_id", unique=True)],
 }
 
 
 async def ensure_indexes() -> None:
     for collection, models in INDEXES.items():
-        for model in models:  # one at a time so a bad spec skips only itself
+        for model in models:
             try:
                 await db[collection].create_indexes([model])
-            except Exception as exc:  # never block boot on an index; the log line names what to fix
-                logging.getLogger(__name__).error("ensure_indexes(%s.%s): %s", collection, model.document["name"], exc)
-
-# Create the main app without a prefix
-app = FastAPI()
-
-# Create a router with the /api prefix
-api_router = APIRouter(prefix="/api")
+            except Exception as exc:
+                logger.error("ensure_indexes(%s.%s): %s", collection, model.document["name"], exc)
 
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+SAMPLES = [
+    ("quote_wizard", "portal", "Dana Whitfield", "dana@sample-inspect.example", "Sample Fire & Safety Inspections",
+     "United States", "google", "Proposal Sent", "Customers with 40+ sites keep emailing for inspection reports."),
+    ("contact_form", "website", "Marc Tremblay", "marc@sample-calib.example", "Sample Calibration Labs",
+     "Canada", "linkedin", "Qualified", "Our website does not generate inquiries; most come by phone."),
+    ("quote_wizard", "automation", "Priya Shah", "priya@sample-ndt.example", "Sample NDT Services",
+     "United States", "referral", "Won", "Quote follow-up is manual and often missed."),
+    ("whatsapp", "training", "Liam O'Connor", "liam@sample-elevator.example", "Sample Elevator Testing",
+     "Canada", "whatsapp", "New", "Wants AI training for 12 office staff."),
+]
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
 
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
+async def seed_samples() -> None:
+    if not env_bool("SEED_SAMPLE_LEADS") or await db.leads.count_documents({"is_sample": True}):
+        return
+    for i, (ch, svc, name, email, company, country, source, stage, text) in enumerate(SAMPLES):
+        brief = {"headline": f"SAMPLE: {text[:100]}", "rows": [{"q": "Summary", "a": text}], "text": text}
+        doc = leads.base_lead(ch, svc, {"name": name, "email": email, "company": company, "country": country},
+                              brief, source=source, attribution={"landing_page": "/industries/commercial-field-service"},
+                              contact_group_id=str(uuid.uuid4()), idempotency_key=f"sample-{i}-seed-0000000")
+        doc.update(is_sample=True, stage=stage, follow_up_date=(date.today() - timedelta(days=2 - i)).isoformat(),
+                   formspree={"status": "not_applicable"})
+        order = leads.STAGES[: leads.STAGES.index(stage) + 1]
+        doc["stage_history"] = [{"stage": s, "at": iso()} for s in order]
+        if stage in ("Proposal Sent", "Won"):
+            doc["proposal"] = {"status": "sent", "notes": "", "sent_at": iso()}
+            doc["booking"] = {"status": "confirmed", "confirmed_by": "founder", "at": iso()}
+        await leads.insert_lead(doc)
+
+
+app = FastAPI(title="AdZenMedia API")
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_handler(request, exc: RequestValidationError):
+    errors = [{"loc": list(e["loc"]), "msg": e["msg"].replace("Value error, ", "")} for e in exc.errors()]
+    return JSONResponse(status_code=422, content={"detail": errors})
+
+
+@app.get("/api/")
 async def root():
-    return {"message": "Hello World"}
+    return {"service": "AdZenMedia API", "status": "ok"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks(limit: int = Query(20, ge=1, le=100)):
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).sort("timestamp", -1).limit(limit).to_list(limit)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+@app.get("/api/public/case-studies")
+async def case_studies():
+    return {"items": public_case_studies()}
 
-# Include the router in the main app
-app.include_router(api_router)
+
+app.include_router(leads.router)
+app.include_router(voice.router)
+app.include_router(admin.router)
+app.include_router(auth_admin.router)
+app.include_router(clerk_router)
 
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=env("CORS_ORIGINS", "*").split(","),
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
-async def start_index_build():
-    app.state.index_task = asyncio.create_task(ensure_indexes())  # background: a big index build must not block boot
+async def startup():
+    await ensure_indexes()
+    with suppress(Exception):
+        await seed_samples()
+    app.state.worker = asyncio.create_task(email_worker())
+
 
 @app.on_event("shutdown")
-async def shutdown_db_client():
-    app.state.index_task.cancel()  # stop a build still running before its client closes
+async def shutdown():
+    app.state.worker.cancel()
     with suppress(asyncio.CancelledError):
-        await app.state.index_task
+        await app.state.worker
     client.close()

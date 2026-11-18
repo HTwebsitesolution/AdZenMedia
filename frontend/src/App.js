@@ -1,56 +1,65 @@
-import { useEffect } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-import { HOME } from "@/constants/testIds";
+import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
+import { SignIn, SignUp } from "@clerk/react";
+import { Toaster } from "@/components/ui/sonner";
+import Layout from "@/components/site/Layout";
+import ClerkAuthProvider from "@/components/auth/ClerkAuthProvider";
+import { ConfigProvider } from "@/lib/config";
+import { Seo } from "@/components/site/Seo";
+import Home from "@/pages/Home";
+import { OfferPage, SolutionsHub } from "@/pages/Solutions";
+import { AboutPage, CaseStudyPage, NotFound, PrivacyPage, SectorPage, WorkPage } from "@/pages/InfoPages";
+import ContactPage from "@/pages/Contact";
+import SystemsCheckPage, { QuotePage } from "@/pages/SystemsCheck";
+import QuoteWizard from "@/components/quote/QuoteWizard";
+import FounderLayout from "@/pages/founder/FounderLayout";
+import Dashboard from "@/pages/founder/Dashboard";
+import LeadDetail from "@/pages/founder/LeadDetail";
+import Reports from "@/pages/founder/Reports";
+import SystemPage from "@/pages/founder/SystemPage";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const AuthShell = () => (
+  <ClerkAuthProvider>
+    <Seo title="Founder sign-in" noindex />
+    <Outlet />
+  </ClerkAuthProvider>
+);
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    // The marker attribute below lets the platform probe detect the stock splash — remove it with this page
-    <div data-emergent-splash>
-      <header className="App-header">
-        <a
-          data-testid={HOME.emergentLink}
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+const Centered = ({ children }) => <div className="min-h-screen flex items-center justify-center p-4">{children}</div>;
 
 function App() {
   return (
-    <div className="App">
+    <ConfigProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/solutions" element={<SolutionsHub />} />
+            <Route path="/solutions/:slug" element={<OfferPage />} />
+            <Route path="/industries/commercial-field-service" element={<SectorPage />} />
+            <Route path="/work" element={<WorkPage />} />
+            <Route path="/work/:slug" element={<CaseStudyPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/quote" element={<QuotePage><QuoteWizard /></QuotePage>} />
+            <Route path="/systems-check" element={<SystemsCheckPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+          <Route element={<AuthShell />}>
+            <Route path="/sign-in/*" element={<Centered><SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" withSignUp forceRedirectUrl="/founder" /></Centered>} />
+            <Route path="/sign-up/*" element={<Centered><SignUp routing="path" path="/sign-up" signInUrl="/sign-in" forceRedirectUrl="/founder" /></Centered>} />
+            <Route path="/founder" element={<FounderLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="leads/:id" element={<LeadDetail />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="system" element={<SystemPage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
-    </div>
+      <Toaster theme="dark" position="top-right" />
+    </ConfigProvider>
   );
 }
 

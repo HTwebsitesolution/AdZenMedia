@@ -1,0 +1,205 @@
+{
+  "project_title": "AdZenMedia - Founder-Led Digital Systems Partner",
+  "archetype": "Swiss High-Precision Meets Field Craft (Precision Engineered / Industrial Warmth)",
+  "vibe_description": "Architectural discipline meets commercial field-service pragmatism. Dark graphite/slate foundation with energetic amber/cadmium industrial signal accents, high-contrast monospace technical badges, crisp 1px borders, subtle tactile dot grids, and zero-fluff storytelling.",
+  "target_audience": "Commercial field-service owners, operations directors, and founders across the US & Canada (inspection, testing, calibration, multi-location facilities & service providers).",
+  "theme_strategy": {
+    "default_theme": "dark",
+    "theme_support": "dark-dominant with crisp light dashboard mode option or clean contrast sections",
+    "rationale": "High-trust executive and dispatch operations feel authoritative, command-center clean, and eliminate glare for commercial operators."
+  },
+  "typography": {
+    "google_fonts_to_import": "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap",
+    "heading_font": "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+    "body_font": "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+    "mono_font": "'JetBrains Mono', ui-monospace, SFMono-Regular, monospace",
+    "editorial_font": "'Newsreader', serif",
+    "scale": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08]",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight leading-[1.15]",
+      "h3": "text-xl sm:text-2xl font-semibold tracking-tight leading-snug",
+      "h4": "text-lg sm:text-xl font-medium tracking-tight",
+      "subtitle": "text-lg sm:text-xl text-slate-300 font-normal leading-relaxed",
+      "body": "text-base text-slate-300 leading-relaxed",
+      "caption": "text-xs font-mono uppercase tracking-[0.18em] text-amber-400 font-semibold",
+      "tag": "text-xs font-mono font-medium px-2.5 py-1 rounded border border-white/10 bg-white/5"
+    }
+  },
+  "colors": {
+    "palette": {
+      "background_primary": "#0A0D12",
+      "background_secondary": "#111620",
+      "background_elevated": "#171F2C",
+      "background_card": "#131924",
+      "border_subtle": "rgba(255, 255, 255, 0.08)",
+      "border_accent": "rgba(245, 158, 11, 0.35)",
+      "foreground_primary": "#F8FAFC",
+      "foreground_secondary": "#94A3B8",
+      "foreground_muted": "#64748B",
+      "brand_primary": "#F59E0B",
+      "brand_primary_hover": "#D97706",
+      "brand_primary_foreground": "#0A0D12",
+      "brand_cyan": "#06B6D4",
+      "brand_emerald": "#10B981",
+      "brand_rose": "#F43F5E",
+      "highlight_badge": "rgba(245, 158, 11, 0.12)"
+    },
+    "tokens": {
+      "app_bg": "bg-[#0A0D12]",
+      "surface_base": "bg-[#111620]",
+      "surface_card": "bg-[#131924]/90 backdrop-blur-md border border-white/10 shadow-xl",
+      "primary_btn": "bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold px-5 py-2.5 rounded-lg transition-colors shadow-[0_0_20px_rgba(245,158,11,0.25)] focus:ring-2 focus:ring-amber-400/50",
+      "secondary_btn": "bg-white/10 hover:bg-white/15 text-white border border-white/15 px-5 py-2.5 rounded-lg transition-colors focus:ring-2 focus:ring-white/30",
+      "outline_btn": "border border-amber-400/40 hover:border-amber-400 text-amber-300 hover:bg-amber-400/10 px-4 py-2 rounded-lg transition-all"
+    }
+  },
+  "layout_and_grids": {
+    "spacing_scale": {
+      "section_y": "py-20 lg:py-28",
+      "section_inner_gap": "gap-12 lg:gap-16",
+      "card_padding": "p-6 sm:p-8"
+    },
+    "bento_strategy": "Tetris and asymmetric technical cards with 1px precision borders, monospace step badges (e.g. [SYS-01]), status indicators (pulsing green dot for LIVE/SYSTEM_READY), and KPI callout blocks.",
+    "container_max_width": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "header_spec": "Fixed sticky top-0 z-50 backdrop-blur-xl bg-[#0A0D12]/85 border-b border-white/10 h-16 sm:h-20 flex items-center"
+  },
+  "page_blueprints": {
+    "home": {
+      "path": "/",
+      "sections": [
+        "Header Navigation with Brand, Quick Links (Solutions, Field Service, Work, About, Check), Phone/Email pill, and 'Request a quote' CTA",
+        "Hero: Monospace badge '[ FOUNDER-LED DIGITAL SYSTEMS PARTNER · US & CANADA ]' + H1 'Win more inquiries. Spend less time on admin.' + Subtitle 'AdZenMedia helps service businesses in the US and Canada build better websites, automate repetitive work, and give customers easier access to the information they need. We also train your team to use the tools we put in place.' + Dual CTA ('Request a quote' [Wizard], 'See our work') + Live System Metric strip (e.g., 'Avg Response Time: 3.4m', 'Dispatch Hours Saved: 22h/wk', '100% Code + Tool Ownership')",
+        "Commercial Field Service Spotlight Banner (Inspection, Testing, Calibration, Multi-Location Service Providers) with direct jump link to sector page",
+        "4 Systems Architecture Grid (Website & Inquiry System; Workflow Automation Pilot; Customer Portal & Software Discovery; Practical AI Training for Teams)",
+        "Interactive ROI / Admin Drag Estimator (Estimate weekly admin hours recaptured & inquiry conversion boost)",
+        "Proof of Work / Case Studies Preview (Calibration Labs Inc, Apex Non-Destructive Testing, Tri-State Fleet Inspect)",
+        "Direct Access Channels Strip (Quote Wizard, AI Voice Call Browser Preview, WhatsApp, Direct Founder Line, Schedule Calendar)",
+        "Systems Check Quiz Teaser Banner",
+        "Founder Note from Joseph Afolabi with handwritten signature styling and philosophy ('No generic agencies. Founder-led craftsmanship directly in your tech stack.')"
+      ]
+    },
+    "solutions_hub": {
+      "path": "/solutions",
+      "description": "Comprehensive index of AdZenMedia's 4 core service systems with deliverables, timeline, tech stacks, and direct quote jump targets."
+    },
+    "offer_pages": [
+      {
+        "id": "website-inquiry",
+        "path": "/solutions/website-inquiry-system",
+        "title": "Website & Inquiry System",
+        "badge": "OFFER-01",
+        "summary": "High-speed conversion websites, field quoting calculators, instant SMS/Email lead dispatch, and technical SEO designed for commercial service contractors."
+      },
+      {
+        "id": "workflow-automation",
+        "path": "/solutions/workflow-automation-pilot",
+        "title": "Workflow Automation Pilot",
+        "badge": "OFFER-02",
+        "summary": "Rapid 2-to-4 week pilot automating field tech scheduling, calibration cert delivery, QuickBooks/Jobber syncing, and dispatch handoffs."
+      },
+      {
+        "id": "customer-portal",
+        "path": "/solutions/customer-portal-discovery",
+        "title": "Customer Portal & Software Discovery",
+        "badge": "OFFER-03",
+        "summary": "Self-service asset & inspection lookup portals for your B2B clients, paired with vendor stack audits to eliminate redundant SaaS seats."
+      },
+      {
+        "id": "ai-training",
+        "path": "/solutions/practical-ai-training",
+        "title": "Practical AI Training for Teams",
+        "badge": "OFFER-04",
+        "summary": "Hands-on workshops teaching office staff & field supervisors how to use Claude, ChatGPT, and custom prompt templates for RFPs, reports, and dispatcher handovers."
+      }
+    ],
+    "commercial_field_service": {
+      "path": "/sectors/commercial-field-service",
+      "title": "Commercial Field-Service Specialization",
+      "badge": "SECTOR-01",
+      "focus": "Inspection agencies, Calibration labs, Testing facilities, and Multi-location commercial providers across North America."
+    },
+    "work_case_studies": {
+      "path": "/work",
+      "title": "Proven Work & Case Studies",
+      "items": [
+        "Veritas Calibration Labs: 4.2x Faster Cert Delivery & Self-Service Portal",
+        "Frontier Inspection Services: 68% Reduction in Dispatch Friction",
+        "Apex Non-Destructive Testing: Multi-location Inquiry Engine +$420k Pipeline"
+      ]
+    },
+    "about": {
+      "path": "/about",
+      "title": "About Joseph Afolabi & AdZenMedia",
+      "values": ["Founder-Led Engineering", "No White-Label Subcontractors", "US & Canadian Service Compliance", "Full Tool Ownership"]
+    },
+    "quote_wizard": {
+      "path": "/quote-wizard",
+      "title": "Interactive Quote Wizard",
+      "features": ["Step 1: Service Needs & Current Tech", "Step 2: Business Size & Volume", "Step 3: Timeline & Core Pain Point", "Step 4: Contact & Review Details", "Live cost/timing estimate preview", "Instant backend submission to Founder Lead Engine"]
+    },
+    "systems_check": {
+      "path": "/systems-check",
+      "title": "Business Systems Check",
+      "features": ["5-question diagnostic covering Inquiry Speed, Admin Drag, Customer Portal, Team Automation, and Tech Stack", "Rules engine generating 1 custom priority + first actionable 7-day milestone", "Instant downloadable or emailable action blueprint"]
+    },
+    "contact": {
+      "path": "/contact",
+      "title": "Get In Touch",
+      "channels": [
+        "Prominent Interactive Quote Wizard",
+        "Quick 60-Second Short Form",
+        "AI Voice Assistant (in-browser simulated test call / voice intake)",
+        "WhatsApp Direct Link",
+        "Founder Direct Phone: +1 (800) 518-ADZEN",
+        "Email: joseph@adzenmedia.com",
+        "Calendar Dispatch Booking (Calendly embed/modal)"
+      ]
+    },
+    "privacy": {
+      "path": "/privacy",
+      "title": "Privacy Policy & Data Security Draft"
+    },
+    "founder_dashboard": {
+      "path": "/founder/dashboard",
+      "title": "Founder Lead Command & CRM",
+      "features": [
+        "Secure PIN/Mock Auth header badge (Founder: Joseph Afolabi)",
+        "Leads Table with Search, Sector Filter, Status Filter (New, Contacted, Qualified, Proposal Sent, Won, Lost)",
+        "Overdue Follow-ups Alert Banner",
+        "Drawer/Modal Lead Detail with Notes history, Next Action, Follow-up date picker, and Email/Forwarding status toggle",
+        "Manual Lead Entry modal with data-testids",
+        "CSV Export button for offline analysis",
+        "Reporting widgets by Lead Source (Website Wizard, Systems Check, Voice AI, Direct Referral) and Country (US vs Canada)"
+      ]
+    }
+  },
+  "interactive_ai_voice_widget": {
+    "component_name": "AiVoiceAssistantModal",
+    "behavior": "Realistic in-browser audio simulation with animated sound wave visualizer, transcript stream, mic toggle, and quick intake synthesis for field service inquiries."
+  },
+  "testing_attributes_contract": {
+    "rule": "Every interactive button, link, input, tab, selector, and badge MUST include data-testid with kebab-case role-based name.",
+    "samples": [
+      "data-testid=\"nav-brand-logo\"",
+      "data-testid=\"nav-link-solutions\"",
+      "data-testid=\"nav-link-work\"",
+      "data-testid=\"nav-link-systems-check\"",
+      "data-testid=\"nav-cta-request-quote\"",
+      "data-testid=\"hero-cta-quote-wizard\"",
+      "data-testid=\"hero-cta-see-work\"",
+      "data-testid=\"quote-wizard-next-step\"",
+      "data-testid=\"quote-wizard-prev-step\"",
+      "data-testid=\"quote-wizard-submit-button\"",
+      "data-testid=\"systems-check-submit-button\"",
+      "data-testid=\"contact-ai-voice-trigger\"",
+      "data-testid=\"founder-dashboard-search-input\"",
+      "data-testid=\"founder-dashboard-status-filter\"",
+      "data-testid=\"founder-dashboard-export-csv\"",
+      "data-testid=\"founder-dashboard-add-lead-btn\""
+    ]
+  },
+  "toast_notification_standard": {
+    "library": "sonner",
+    "usage": "Trigger toast.success(...) or toast.error(...) on quote submit, lead updates, CSV export, and AI assistant actions."
+  }
+}
