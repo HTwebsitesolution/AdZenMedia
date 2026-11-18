@@ -12,9 +12,9 @@ const NAV = [
 ];
 
 const Logo = () => (
-  <Link to="/" className="flex items-center gap-2 font-extrabold tracking-tight text-lg" data-testid="nav-logo">
+  <Link to="/" aria-label="AdZenMedia home" className="flex items-center gap-2 font-extrabold tracking-tight text-lg" data-testid="nav-logo">
     <span className="grid place-items-center w-8 h-8 rounded-md bg-amber-400 text-slate-950 font-mono text-sm">AZ</span>
-    AdZenMedia
+    <span className="hidden min-[420px]:inline">AdZenMedia</span>
   </Link>
 );
 

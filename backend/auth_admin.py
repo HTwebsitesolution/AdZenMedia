@@ -4,6 +4,7 @@ import requests
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from pymongo import ReturnDocument
+from starlette.concurrency import run_in_threadpool
 
 from clerk_auth import require_user
 from core import db
@@ -40,7 +41,7 @@ async def current_member(user: dict = Depends(require_user)) -> dict:
     uid = user["user_id"]
     member = await db.users.find_one({"user_id": uid}, {"_id": 0})
     if member is None or not member.get("role"):
-        info = _clerk_user(uid)
+        info = await run_in_threadpool(_clerk_user, uid)
         role = "admin" if _is_admin_email(info) else DEFAULT_ROLE
         email = next((e["email_address"] for e in info.get("email_addresses", [])), "")
         await db.users.update_one({"user_id": uid, "role": {"$in": [None, ""]}}, {"$set": {"role": role}})

@@ -115,8 +115,8 @@ def validate_lead(body: LeadIn) -> None:
                 _err("budget", "Choose a budget option")
     if body.channel == "systems_check":
         valid = {q["id"]: [o["id"] for o in q["options"]] for q in CHECK_QUESTIONS}
-        if not body.check_answers or any(valid.get(k) is None or v not in valid[k]
-                                         for k, v in body.check_answers.items()):
+        if not body.check_answers or set(body.check_answers) != set(valid) or any(
+                v not in valid[k] for k, v in body.check_answers.items()):
             _err("check_answers", "Complete the systems check first")
 
 

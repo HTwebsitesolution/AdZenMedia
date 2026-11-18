@@ -13,7 +13,8 @@ export const QuoteConfirmation = ({ reference, kind = "quote request" }) => {
       <p className="mt-3 text-slate-300">Your reference is</p>
       <p className="mt-1 font-mono text-2xl text-amber-300" data-testid="lead-reference">{reference}</p>
       <p className="mt-4 text-slate-400">
-        Joseph will review it and reply by email. A confirmation email is on its way. This is a request for a scoped quote: no price, delivery date or commitment has been made yet.
+        Joseph will review it and reply by email. A confirmation email is on its way.
+        {kind === "quote request" && " This is a request for a scoped quote: no price, delivery date or commitment has been made yet."}
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         {ch.booking_url && (
@@ -23,7 +24,7 @@ export const QuoteConfirmation = ({ reference, kind = "quote request" }) => {
         )}
         {ch.whatsapp_number && (
           <a href={waLink(ch.whatsapp_number, `Hi AdZenMedia, I'm following up on quote reference ${reference}.`)} target="_blank" rel="noopener noreferrer" className="btn-secondary" onClick={() => track("channel_click", "whatsapp_chat")} data-testid="confirmation-whatsapp">
-            <MessageCircle size={16} /> Message on WhatsApp
+            <MessageCircle size={16} /> Message us on WhatsApp
           </a>
         )}
         <Link to="/" className="btn-secondary" data-testid="confirmation-home">Back to home</Link>

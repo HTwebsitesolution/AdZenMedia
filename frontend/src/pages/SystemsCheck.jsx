@@ -29,7 +29,14 @@ const SendResult = ({ answers }) => {
   const [hp, setHp] = useState("");
   const started = useRef(Date.now());
   async function submit(e) {
-    e.preventDefault(); setBusy(true); setMsg("");
+    e.preventDefault();
+    const errs = {};
+    if (!c.name || c.name.trim().length < 2) errs["contact.name"] = "Please enter your name";
+    if (!c.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) errs["contact.email"] = "Please enter a valid email";
+    if (!c.company || !c.company.trim()) errs["contact.company"] = "Please enter your company";
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
+    setBusy(true); setMsg("");
     try {
       const r = await api.post("/leads", { channel: "systems_check", idempotency_key: idemKey("check"), check_answers: answers,
         contact: c, attribution: getAttribution(), hp, elapsed_ms: Date.now() - started.current });

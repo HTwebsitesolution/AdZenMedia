@@ -94,9 +94,11 @@ def _assert_safe_email(subject: str, html: str) -> None:
 
 
 class EmailError(Exception):
-    def __init__(self, msg: str, permanent: bool = False):
+    def __init__(self, msg: str, permanent: bool = False, throttled: bool = False, retry_after: int = 0):
         super().__init__(msg)
         self.permanent = permanent
+        self.throttled = throttled
+        self.retry_after = retry_after
 
 
 async def _send(to: str, subject: str, html: str) -> str:
@@ -115,7 +117,12 @@ async def _send(to: str, subject: str, html: str) -> str:
             code = resp.json().get("code", "")
         except ValueError:
             code = ""
-        raise EmailError(f"{resp.status_code} {code}".strip(), permanent=resp.status_code in (400, 422))
+        try:
+            retry_after = int(resp.headers.get("retry-after", "0"))
+        except ValueError:
+            retry_after = 0
+        raise EmailError(f"{resp.status_code} {code}".strip(), permanent=resp.status_code in (400, 422),
+                         throttled=resp.status_code == 429, retry_after=retry_after)
     return resp.json().get("id", "")
 
 
@@ -197,13 +204,25 @@ async def _process(job: dict) -> None:
         await db.email_outbox.update_one({"id": job["id"]}, {"$set": {
             "status": "sent", "provider_id": pid, "attempts": attempts, "sent_to": to,
             "last_error": None, "updated_at": iso()}})
-    except (EmailError, ValueError) as e:
-        permanent = isinstance(e, ValueError) or getattr(e, "permanent", False) or attempts >= MAX_ATTEMPTS
-        delay = 30 * (2 ** (attempts - 1))
-        await db.email_outbox.update_one({"id": job["id"]}, {"$set": {
-            "status": "failed" if permanent else "retrying", "attempts": attempts, "last_error": str(e)[:300],
-            "next_attempt_at": (now() + timedelta(seconds=delay)).isoformat(), "updated_at": iso()}})
-        logger.warning("email %s %s failed: %s", job["kind"], job["lead_id"], e)
+    except EmailError as e:
+        if e.throttled:  # rate limited: wait and retry without using up an attempt
+            delay = max(e.retry_after, 60)
+            await db.email_outbox.update_one({"id": job["id"]}, {"$set": {
+                "status": "retrying", "last_error": str(e)[:300],
+                "next_attempt_at": (now() + timedelta(seconds=delay)).isoformat(), "updated_at": iso()}})
+            return
+        await _fail(job, attempts, e)
+    except ValueError as e:
+        await _fail(job, attempts, e)
+
+
+async def _fail(job: dict, attempts: int, e: Exception) -> None:
+    permanent = isinstance(e, ValueError) or getattr(e, "permanent", False) or attempts >= MAX_ATTEMPTS
+    delay = 30 * (2 ** (attempts - 1))
+    await db.email_outbox.update_one({"id": job["id"]}, {"$set": {
+        "status": "failed" if permanent else "retrying", "attempts": attempts, "last_error": str(e)[:300],
+        "next_attempt_at": (now() + timedelta(seconds=delay)).isoformat(), "updated_at": iso()}})
+    logger.warning("email %s %s failed: %s", job["kind"], job["lead_id"], e)
 
 
 async def email_worker() -> None:

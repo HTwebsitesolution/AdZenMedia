@@ -1,0 +1,51 @@
+{
+  "summary": "First full run. Backend: 20/20 pytest pass (new tests/test_adzen_api.py + existing retell webhook test) covering lead intake (quote/contact/systems_check), idempotency (same ref + duplicate:true, one DB record), elapsed_ms guard, branch validation, auth 401/403/200 with real Clerk session tokens, admin list/filters/overdue/search, PATCH stage/next_action/follow_up/booking, notes, conversations, manual phone/whatsapp leads, link contacts, CSV, reports totals, integrations, voice web-call 400/503, hidden case studies, sitemap/robots. Email outbox reached 'sent' to delivered@resend.dev; Formspree 'disabled'. Frontend (Playwright desktop 1920x800 + mobile 390x800): Quote wizard end-to-end incl. branching (automation/portal questions), validation keeping values, reload persistence, optional timing/budget, Edit jumps, route-abort failure banner + retry success, reference AZM-YYMMDD-XXXX; offer page CTAs preselect service; /contact short form + validation; systems check result -> quote prefill + optional contact lead; SEO title/description/canonical/noindex on 14 routes; draft case study redirect; founder dashboard via Clerk ticket (table, filters, search, manual inquiry, lead detail stage/follow-up/note/booking/WhatsApp log persisted after reload, reports, system page); member sees Access restricted; sign-out works. Core everything works; found 2 medium UI bugs and a few minor ones.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "notify.email_worker", "issue": "Emergent email proxy returned 429 rate_limited after a burst of ~6 leads; jobs go to 'retrying' with 30s*2^n backoff and become permanently 'failed' after 5 attempts (~7.5 min). 429 should use longer backoff / Retry-After and not count toward MAX_ATTEMPTS so founder notifications are not lost (founder can retry manually via email-retry-btn)."},
+      {"endpoint": "POST /api/leads (systems_check)", "issue": "validate_lead accepts partial check_answers (any subset of valid keys) – only checks values are valid, not that all 5 questions are answered (the /public/systems-check endpoint does require all)."},
+      {"endpoint": "auth_admin._clerk_user", "issue": "Uses blocking requests.get inside async dependency (first-login only) – blocks event loop up to 10s; use httpx.AsyncClient."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Site header (mobile 390px)", "issue": "Hamburger menu toggle overflows viewport: document scrollWidth=424 on every public page; nav-menu-toggle right edge at 424px, so the menu button is cut off/off-screen and page scrolls horizontally. Logo + 'Contact' + 'Request a quote' + toggle don't fit. Hide nav-contact-mobile below ~420px or shrink CTA.", "selector": "[data-testid='nav-menu-toggle']", "priority": "HIGH"},
+      {"component": "QuoteWizard ?service preselect", "issue": "If sessionStorage azm_quote already holds a service (wizard previously started), clicking an offer page 'Request a quote' (/quote?service=website) keeps the OLD service (e.g. training) because the effect only applies svc when !p.service. Same for systems-check 'Turn this into a quote request' (service and goal ignored if goal already set). Explicit ?service param should override (maybe clear service-specific answers).", "selector": "[data-testid='offer-request-quote-btn']", "priority": "MEDIUM"},
+      {"component": "Systems check contact form", "issue": "No client-side validation; submitting empty shows raw Pydantic messages 'Field required' x3 instead of friendly text (Quote wizard/contact form show 'Please enter your name' etc.).", "selector": "[data-testid='check-contact-submit']", "priority": "LOW"},
+      {"component": "QuoteConfirmation (systems check)", "issue": "Systems-check confirmation copy says 'This is a request for a scoped quote: no price, delivery date...' – quote-specific text shown for systems check result submissions.", "selector": "[data-testid='lead-confirmation']", "priority": "LOW"},
+      {"component": "Confirmation scroll", "issue": "After submit (wizard/systems check) the page is not scrolled to the confirmation; its heading sits under the sticky header on desktop.", "selector": "[data-testid='lead-confirmation']", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Founder lead detail", "issues": ["Follow-up date uses native <input type=date> (browser picker) instead of shadcn Calendar/Popover", "Headline shows 'Whatsapp:' (should be 'WhatsApp:') for manual whatsapp leads (CHANNEL_LABELS capitalize())", "Proposal/fit selects show raw values 'not_started'/'unknown'"]},
+      {"screen": "Founder dashboard", "issues": ["No loading state: shows '0 shown' with empty table before leads arrive (observed once right after sign-in)"]},
+      {"screen": "Founder access restricted (member)", "issues": ["Bare page with no link back to site / sign-out text, top-left aligned"]},
+      {"screen": "404 page", "issues": ["No meta description; canonical points to the non-existent URL"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_adzen_api.py", "/app/backend/tests/test_retell_webhook.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Fix mobile header overflow at 390px so nav-menu-toggle is visible (scrollWidth must equal 390)",
+    "Make ?service= (and from=check) override a previously stored wizard service in QuoteWizard",
+    "Add client-side validation + friendly messages to systems-check contact form",
+    "Treat email 429 with longer backoff/Retry-After, not as an attempt toward permanent failure",
+    "Require all 5 check_answers in validate_lead for systems_check channel",
+    "Minor copy/design: systems-check confirmation text, 'WhatsApp' casing, shadcn date picker, dashboard loading state"
+  ],
+  "critical_code_review_comments": [
+    "QuoteWizard.jsx L41-45: `if (svc && !p.service)` ignores explicit URL intent when sessionStorage has state",
+    "SystemsCheck.jsx SendResult: no client validation; errorMap shows backend 'Field required'",
+    "notify.py _process: 429 counted toward MAX_ATTEMPTS=5 with max ~4 min delay",
+    "leads.py validate_lead systems_check: partial answers accepted",
+    "auth_admin.py _clerk_user sync requests in async path",
+    "admin.py DELETE /api/admin/samples exists (bulk delete) – not executed by tester; needs manual check"
+  ],
+  "updated_files": ["/app/backend/tests/test_adzen_api.py"],
+  "success_rate": {"backend": "100% (20/20)", "frontend": "~90% (all requested flows work; mobile header overflow + stale service preselect bugs)"},
+  "test_credentials": "Used /app/memory/test_credentials.md: founder+clerk_test@example.com (admin), member+clerk_test@example.com (member). Session tokens via Clerk Backend API; POST /v1/sessions/{id}/tokens needs JSON body {} (else 415).",
+  "seed_data_creation": "None. All TEST_ leads created (API + UI) were deleted by id/reference afterwards; sample leads untouched. DB now has 4 samples + 1 pre-existing lead.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run `cd /app/backend && python -m pytest tests -q` (xdist -n 2 configured). test_adzen_api.py reads REACT_APP_BACKEND_URL from frontend/.env and CLERK_SECRET_KEY via dotenv (never printed). UI sign-in: python script POST /v1/sign_in_tokens then open /sign-in?__clerk_ticket=<token> (one-time use). Email proxy rate limits bursts (429) – expect some 'retrying' outbox jobs after many submissions. Retest: mobile header scrollWidth at 390px, offer CTA after a prior wizard session, systems-check contact validation."
+}

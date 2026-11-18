@@ -38,11 +38,10 @@ export default function QuoteWizard() {
     try { check = JSON.parse(sessionStorage.getItem("azm_check_result")); } catch { /* none */ }
     setS((p) => {
       const n = { ...p };
-      if (svc && !p.service) n.service = svc;
-      if (params.get("from") === "check" && check && !p.goal) {
-        n.service = n.service || check.service;
-        n.goal = `Systems check priority: ${check.priority}. `;
-      }
+      const fromCheck = params.get("from") === "check" && check;
+      const target = svc || (fromCheck ? check.service : "");
+      if (target && target !== p.service) { n.service = target; n.answers = {}; n.step = 0; }
+      if (fromCheck && !(p.goal || "").includes(check.priority)) n.goal = `Systems check priority: ${check.priority}. ${p.goal || ""}`.trim() + " ";
       return n;
     });
     track("wizard_start", "quote_wizard");
