@@ -54,7 +54,8 @@ export default function QuoteWizard() {
     let check = null;
     try { check = JSON.parse(sessionStorage.getItem("azm_check_result")); } catch { /* none */ }
     const fromCheck = params.get("from") === "check" && check;
-    const wanted = (params.get("service") || (fromCheck ? check.service : "")).split(",").filter(Boolean);
+    let wanted = (params.get("service") || (fromCheck ? check.service : "")).split(",").filter(Boolean);
+    if (wanted.length > 1) wanted = wanted.filter((x) => x !== "not_sure");
     setS((p) => {
       const n = { ...p };
       if (wanted.length && wanted.join() !== p.services.join()) { n.services = wanted; n.answers = {}; n.step = 0; }

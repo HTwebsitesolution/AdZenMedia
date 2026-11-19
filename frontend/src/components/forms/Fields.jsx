@@ -24,7 +24,7 @@ const optCls = (on) => `flex items-start gap-3 rounded-xl border px-4 py-3 curso
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 export const ChoiceGroup = ({ id, label, options, value, onChange, error, required, columns = 1 }) => (
-  <fieldset>
+  <fieldset aria-describedby={error ? `${id}-err` : undefined} aria-invalid={!!error}>
     <legend className="field-label">{label}{required ? <span className="text-[#2247FF]"> *</span> : opt(false)}</legend>
     <div className={`grid gap-2 ${columns === 2 ? "sm:grid-cols-2" : ""}`}>
       {options.map((o) => {
@@ -38,12 +38,12 @@ export const ChoiceGroup = ({ id, label, options, value, onChange, error, requir
         );
       })}
     </div>
-    {error && <p className="field-error" role="alert">{error}</p>}
+    {error && <p id={`${id}-err`} className="field-error" role="alert">{error}</p>}
   </fieldset>
 );
 
 export const MultiChoice = ({ id, label, options, value = [], onChange, error, required }) => (
-  <fieldset>
+  <fieldset aria-describedby={error ? `${id}-err` : undefined} aria-invalid={!!error}>
     <legend className="field-label">{label}{required ? <span className="text-[#2247FF]"> *</span> : opt(false)}</legend>
     <div className="grid gap-2 sm:grid-cols-2">
       {options.map((o) => {
@@ -58,7 +58,7 @@ export const MultiChoice = ({ id, label, options, value = [], onChange, error, r
         );
       })}
     </div>
-    {error && <p className="field-error" role="alert">{error}</p>}
+    {error && <p id={`${id}-err`} className="field-error" role="alert">{error}</p>}
   </fieldset>
 );
 

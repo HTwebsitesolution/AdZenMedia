@@ -41,8 +41,8 @@ const Qualification = ({ lead, save }) => {
   return (
     <Card title="Qualification, proposal & booking" testid="lead-qualification">
       <div className="grid sm:grid-cols-2 gap-3">
-        <label className="text-xs text-slate-400">Fit<select value={q.fit || "unknown"} onChange={(e) => setQ({ ...q, fit: e.target.value })} className={inp} data-testid="lead-fit">{["unknown", "good", "possible", "poor"].map((x) => <option key={x}>{x}</option>)}</select></label>
-        <label className="text-xs text-slate-400">Proposal status<select value={p.status || "not_started"} onChange={(e) => setP({ ...p, status: e.target.value })} className={inp} data-testid="lead-proposal-status">{["not_started", "drafting", "sent", "accepted", "declined"].map((x) => <option key={x}>{x}</option>)}</select></label>
+        <label className="text-xs text-slate-400">Fit<select value={q.fit || "unknown"} onChange={(e) => setQ({ ...q, fit: e.target.value })} className={inp} data-testid="lead-fit">{[["unknown", "Not assessed"], ["good", "Good fit"], ["possible", "Possible fit"], ["poor", "Poor fit"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+        <label className="text-xs text-slate-400">Proposal status<select value={p.status || "not_started"} onChange={(e) => setP({ ...p, status: e.target.value })} className={inp} data-testid="lead-proposal-status">{[["not_started", "Not started"], ["drafting", "Drafting"], ["sent", "Sent"], ["accepted", "Accepted"], ["declined", "Declined"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
         <textarea rows={2} placeholder="Qualification notes (budget fit, decision maker, timing)" value={q.notes || ""} onChange={(e) => setQ({ ...q, notes: e.target.value })} className={inp} data-testid="lead-qual-notes" />
         <textarea rows={2} placeholder="Proposal notes (pricing set by you, never automated)" value={p.notes || ""} onChange={(e) => setP({ ...p, notes: e.target.value })} className={inp} data-testid="lead-proposal-notes" />
       </div>

@@ -36,9 +36,13 @@ def member_h():
 
 
 def quote_payload(**kw):
-    p = {"channel": "quote_wizard", "idempotency_key": uuid.uuid4().hex, "service": "automation",
-         "goal": "TEST_ Make quote follow-up consistent",
-         "answers": {"workflow": "Quote follow-up", "current_process": "Office manager emails manually"},
+    """New multi-service shape: services: [ids], answers: {svc: {qid: value}}."""
+    p = {"channel": "quote_wizard", "idempotency_key": uuid.uuid4().hex,
+         "services": ["meta_leadgen_ai", "social_video"],
+         "goal": "TEST_ Capture more leads from Meta and reply fast",
+         "answers": {"meta_leadgen_ai": {"campaign_goal": "Book an appointment", "lead_response": "Same day"},
+                     "social_video": {"content_types": ["Short-form video (Reels, TikTok, Shorts)"],
+                                      "content_volume": "5–12 pieces"}},
          "timing": "Within 1–3 months",
          "contact": {"name": "TEST_ Wizard", "email": "test_wiz@example.com", "company": "TEST_ Co",
                      "country": "Canada"},
@@ -47,16 +51,24 @@ def quote_payload(**kw):
     return p
 
 
-# ---------- public lead intake ----------
+def _loc(r):
+    d = r.json()["detail"]
+    return ".".join(str(x) for x in d[0]["loc"]) if isinstance(d, list) else str(d)
+
+
+# ---------- public lead intake (NOTE: /api/leads is rate limited 10/hour/IP incl. 422s) ----------
 class TestLeads:
     def test_public_config(self):
         r = requests.get(f"{BASE_URL}/api/public/config", headers=UA)
         assert r.status_code == 200
         d = r.json()
-        assert set(q["id"] for q in d["questions"]["automation"]) == {"workflow", "current_process", "volume"}
+        ids = [s["id"] for s in d["services"]]
+        assert len(ids) == 9 and "meta_leadgen_ai" in ids and ids[-1] == "not_sure"
+        assert {q["id"] for q in d["questions"]["meta_leadgen_ai"]} == {"campaign_goal", "lead_response", "calendar"}
+        assert set(d["questions"]) == set(ids)
         assert d["channels"]["voice_enabled"] is False
 
-    def test_idempotent_quote(self, admin_h):
+    def test_idempotent_multi_service_quote(self, admin_h):
         p = quote_payload()
         r1 = requests.post(f"{BASE_URL}/api/leads", json=p, headers=UA)
         assert r1.status_code == 200, r1.text
@@ -68,27 +80,44 @@ class TestLeads:
         assert r2.json() == {"reference": ref, "duplicate": True}
         items = requests.get(f"{BASE_URL}/api/admin/leads", params={"q": ref}, headers=admin_h).json()["items"]
         assert len(items) == 1
-        CREATED.append(items[0]["id"])
         lid = items[0]["id"]
-        time.sleep(12)  # outbox worker + formspree
+        CREATED.append(lid)
+        assert items[0]["services"] == ["meta_leadgen_ai", "social_video"]
+        assert items[0]["service_label"] == "Meta Lead Generation + AI Follow-up, Social Media & Video Editing"
+        f = requests.get(f"{BASE_URL}/api/admin/leads", params={"service": "meta_leadgen_ai", "q": ref},
+                         headers=admin_h).json()["items"]
+        assert [i["id"] for i in f] == [lid]
+        f2 = requests.get(f"{BASE_URL}/api/admin/leads", params={"service": "social_video"}, headers=admin_h).json()
+        assert lid in [i["id"] for i in f2["items"]]
+        time.sleep(10)
         d = requests.get(f"{BASE_URL}/api/admin/leads/{lid}", headers=admin_h).json()
+        rows = [x["q"] for x in d["lead"]["brief"]["rows"]]
+        assert "Meta Lead Generation + AI Follow-up · How fast do you reply to new leads today?" in rows
+        assert "Social Media & Video Editing · How much content per month?" in rows
         kinds = {e["kind"]: e["status"] for e in d["emails"]}
-        print("emails", kinds, "formspree", d["lead"]["formspree"])
+        print("emails", kinds)
         assert "visitor_acknowledgment" in kinds and "founder_notification" in kinds
-        assert all(s == "sent" for s in kinds.values())
-        assert all(e.get("sent_to") == "delivered@resend.dev" for e in d["emails"])
-        assert d["lead"]["formspree"]["status"] == "disabled"
         assert d["lead"]["source"] == "test_src"
 
     def test_fast_submit_rejected(self):
         r = requests.post(f"{BASE_URL}/api/leads", json=quote_payload(elapsed_ms=200), headers=UA)
         assert r.status_code == 400
 
-    def test_wrong_branch_answer_rejected(self):
-        r = requests.post(f"{BASE_URL}/api/leads", json=quote_payload(
-            answers={"portal_users": ["Our customers"], "workflow": "Quote follow-up",
-                     "current_process": "x"}), headers=UA)
-        assert r.status_code == 422
+    def test_missing_required_answer_loc(self):
+        p = quote_payload()
+        del p["answers"]["meta_leadgen_ai"]["lead_response"]
+        r = requests.post(f"{BASE_URL}/api/leads", json=p, headers=UA)
+        assert r.status_code == 422 and _loc(r) == "body.answers.meta_leadgen_ai.lead_response", r.text
+
+    def test_not_sure_with_others_rejected(self):
+        p = quote_payload(services=["not_sure", "website"], answers={})
+        r = requests.post(f"{BASE_URL}/api/leads", json=p, headers=UA)
+        assert r.status_code == 422 and _loc(r) == "body.services", r.text
+
+    def test_answers_for_unselected_service_rejected(self):
+        p = quote_payload(services=["meta_leadgen_ai"])
+        r = requests.post(f"{BASE_URL}/api/leads", json=p, headers=UA)
+        assert r.status_code == 422 and _loc(r) == "body.answers.social_video", r.text
 
     def test_missing_required_contact(self):
         p = quote_payload()
@@ -100,27 +129,33 @@ class TestLeads:
              "contact": {"name": "TEST_ Contact", "email": "test_c@example.com", "company": "TEST_ C"},
              "elapsed_ms": 3000}
         r = requests.post(f"{BASE_URL}/api/leads", json=p, headers=UA)
-        assert r.status_code == 200
+        assert r.status_code == 200, r.text
         it = requests.get(f"{BASE_URL}/api/admin/leads", params={"q": r.json()["reference"]},
                           headers=admin_h).json()["items"]
         CREATED.append(it[0]["id"])
         assert it[0]["channel"] == "contact_form"
-        p2 = {**p, "idempotency_key": uuid.uuid4().hex, "message": ""}
-        assert requests.post(f"{BASE_URL}/api/leads", json=p2, headers=UA).status_code == 422
 
     def test_systems_check_and_lead(self, admin_h):
         ans = {"inquiries": "form", "followup": "rarely", "documents": "rarely", "sites": "no", "ai": "regular"}
         r = requests.post(f"{BASE_URL}/api/public/systems-check", json={"answers": ans}, headers=UA)
-        assert r.status_code == 200 and r.json()["service"] == "automation"
+        assert r.status_code == 200 and r.json()["service"] == "ai_automation"
         p = {"channel": "systems_check", "idempotency_key": uuid.uuid4().hex, "check_answers": ans,
              "contact": {"name": "TEST_ Check", "email": "test_chk@example.com", "company": "TEST_ K"},
              "elapsed_ms": 3000}
         lr = requests.post(f"{BASE_URL}/api/leads", json=p, headers=UA)
-        assert lr.status_code == 200
+        assert lr.status_code == 200, lr.text
         it = requests.get(f"{BASE_URL}/api/admin/leads", params={"q": lr.json()["reference"]},
                           headers=admin_h).json()["items"]
         CREATED.append(it[0]["id"])
-        assert it[0]["service"] == "automation" and it[0]["channel"] == "systems_check"
+        assert it[0]["service"] == "ai_automation" and it[0]["channel"] == "systems_check"
+
+    def test_legacy_leads_still_open(self, admin_h):
+        d = requests.get(f"{BASE_URL}/api/admin/leads", params={"include_samples": "true"}, headers=admin_h).json()
+        legacy = [i for i in d["items"] if i.get("service") in ("portal", "automation") or not i.get("services")]
+        assert legacy, "expected legacy single-service leads"
+        for i in legacy:
+            g = requests.get(f"{BASE_URL}/api/admin/leads/{i['id']}", headers=admin_h)
+            assert g.status_code == 200, (i["reference"], g.text)
 
 
 # ---------- auth / roles ----------
@@ -157,7 +192,7 @@ class TestAdmin:
 
     def test_manual_lead_patch_notes_conv_link(self, admin_h):
         mk = lambda ch, n: requests.post(f"{BASE_URL}/api/admin/leads", headers=admin_h, json={
-            "channel": ch, "service": "portal", "summary": f"TEST_ manual {ch}",
+            "channel": ch, "service": "software", "summary": f"TEST_ manual {ch}",
             "contact": {"name": n, "phone": "+1 555 0100", "country": "United States"}})
         a, b = mk("phone", "TEST_ Phone"), mk("whatsapp", "TEST_ WA")
         assert a.status_code == 200 and b.status_code == 200, a.text

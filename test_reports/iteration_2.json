@@ -1,0 +1,41 @@
+{
+  "summary": "I tested the revised AdZenMedia site front to back: backend pytest plus Playwright on desktop (1920), mobile (390) and with reduced motion turned on. All requested features work. Homepage: there is no 'Built first for' box and no Field service link. The nav is Services/Work/About/Systems check/Contact. The headline text is exact and the CTAs are visible. On mobile, nav-contact-mobile shows and scrollWidth is 390 on 8 pages. 3D hero: data-render='3d' and a canvas appear. The Web/Marketing/AI buttons toggle aria-pressed, the caption and the scene (screenshots taken). ArrowRight/Left move between the buttons and pause/play toggles. With reduced motion, data-render='poster' shows the SVG poster with no canvas, the mode buttons still work and the CTAs navigate. The social_video, meta_ads and ai_booking home entries open /services/<slug>. All 8 service pages have a CTA to /quote?service=<id>, and the wizard opens with that service checked. Lead journey: the sample label is shown, Next/Prev and the tabs move through Ad → Lead captured → AI follow-up → Booked, Next is disabled at the end, and arrow keys work. Quote Wizard: multi-select works and 'Not sure yet' clears the others. Step 2 shows only the meta_leadgen_ai and social_video sections with the right questions. Required-field errors appear (3 answers, 3 contact fields) and entered values are kept. Review groups answers by service with 9 Edit buttons. Edit services → removing social_video drops its answers from the review. Submit returns a reference (AZM-261119-MV2G). Founder dashboard (Clerk ticket): the row shows services, the detail page shows service chips and brief rows like 'Meta Lead Generation + AI Follow-up · How fast do you reply to new leads today?', and filter-service=meta_leadgen_ai finds it. Older leads (4 samples, the legacy 'Test User' lead, the main agent's 'Self Test') are still listed and their detail pages open. The manual inquiry dialog is readable on the dark theme. Legacy redirects and the Work → industry page link work. Contact: the quote card and short form work (validation and submit). The preview shows 6 channels awaiting owner setup, with no channel buttons. The wizard can be used with Tab, Space and Enter, and focus moves to the step heading.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/leads", "issue": "rate_limit() runs before validate_lead(), so 422 validation failures count toward LEAD_RATE_LIMIT_PER_HOUR (10/hour/IP). A visitor who gets several server-side 422s (or several people behind one office IP) can get a 429. Consider counting only successful saves, or validating first."},
+      {"endpoint": "GET /api/admin/leads?service=", "issue": "Legacy leads stored with old service ids ('automation', 'portal') can't be found with any option in the dashboard service filter, because the filter only lists the new ids. Example: sample J82L, legacy VKA9 and DGKP. Consider mapping legacy ids (automation→ai_automation, portal→software) in the filter query, or adding legacy options."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Quote prefill", "issue": "/quote?service=not_sure,website pre-checks both, which the UI otherwise prevents. The backend then rejects the submit with 422 'services'. This is an edge case from a hand-written URL; toggleServices rules are not applied to the prefill.", "affected_selectors": ["quote-service-option-not-sure"]}
+    ],
+    "design_issues": [
+      {"screen": "Contact page quote card", "issues": ["Copy says 'Four short steps' but the wizard shows 'Step 1 of 5' (the Review step is counted)."]},
+      {"screen": "Founder lead detail", "issues": ["The Follow-up date uses the native browser date input (mm/dd/yyyy) instead of a shadcn calendar picker.", "The Fit and Proposal status selects show raw values ('unknown', 'not_started')."]},
+      {"screen": "Forms a11y", "issues": ["ChoiceGroup/MultiChoice error messages are not linked to their fieldset with aria-describedby (TextField does link its errors)."]},
+      {"screen": "Mobile menu", "issues": ["The Services/Work/About/Systems check/Contact links in the mobile menu have no data-testid."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_adzen_api.py", "/app/backend/tests/test_retell_webhook.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Optional: move rate_limit after validate_lead (or skip counting 422s) in POST /api/leads",
+    "Optional: map legacy service ids (automation, portal) in the admin service filter",
+    "Optional: fix 'Four short steps' copy on the Contact quote card",
+    "Optional: apply the not_sure exclusivity rule to the ?service= prefill"
+  ],
+  "critical_code_review_comments": [
+    "leads.py create_lead: rate limit is applied before validation (see minor backend issue).",
+    "QuoteWizard: stale answers for removed services stay in sessionStorage. Harmless, because submit filters by the selected services (checked).",
+    "Fields.jsx: radio/checkbox group errors have no id or aria-describedby."
+  ],
+  "updated_files": ["/app/backend/tests/test_adzen_api.py"],
+  "success_rate": {"backend": "100% (23/23 pytest)", "frontend": "100% of requested flows"},
+  "test_credentials": "Used admin founder+clerk_test@example.com (user_3MIblHk8JfGLhYmUWIYARZDsijo) through a Clerk sign_in_token ticket, and member for the 403 checks. Accounts unchanged.",
+  "seed_data_creation": "Kept one lead as requested: AZM-261119-MV2G 'TEST Meta Sample' (Meta Lead Generation + AI Follow-up, Canada). The pytest leads and the UI contact lead (AZM-261119-EA3K) were deleted by id. No seed or legacy data was changed.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "test_adzen_api.py now uses the multi-service payload (services: [ids], answers: {svc: {qid: v}}) and checks the 422 loc paths, not_sure exclusivity, idempotency, the service filter, brief rows and that legacy lead details open. Watch POST /api/leads: it is limited to 10/hour/IP and 422s count too. A pytest run uses about 6 of those, so space out UI submissions or you get 429s. Wizard option testids are quote-q-<svc>-<qid>-option-<slug>. Dashboard rows are lead-row-<REFERENCE>. The mobile nav toggle is nav-menu-toggle. The app's public URL is REACT_APP_BACKEND_URL (adzen-systems--3h8xg6gr...)."
+}

@@ -136,7 +136,7 @@ export function createHeroScene(canvas, initialMode = "web") {
   fillLight.position.set(3.5, -2.5, 4);
   scene.add(fillLight);
 
-  const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.28 }));
+  const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.16 }));
   backdrop.position.z = -3.2;
   backdrop.receiveShadow = true;
   scene.add(backdrop);

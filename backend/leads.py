@@ -263,8 +263,8 @@ async def create_lead(body: LeadIn, request: Request):
         return {"reference": new_reference(), "duplicate": False}
     if body.elapsed_ms < 1500:
         raise HTTPException(status_code=400, detail="That was very quick. Please review your answers and submit again.")
-    await rate_limit(request, "lead", env_int("LEAD_RATE_LIMIT_PER_HOUR", 10), 3600)
     validate_lead(body)
+    await rate_limit(request, "lead", env_int("LEAD_RATE_LIMIT_PER_HOUR", 10), 3600)
     brief = build_brief(body)
     contact = body.contact.model_dump()
     if body.channel == "quote_wizard":

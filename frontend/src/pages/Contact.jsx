@@ -66,7 +66,7 @@ export default function ContactPage() {
           <Link to="/quote" className="surface p-7 block border-amber-400/40 hover:border-amber-400 transition-colors" data-testid="contact-quote-card">
             <p className="eyebrow">Recommended</p>
             <h2 className="mt-2 text-2xl font-bold">Request a quote</h2>
-            <p className="mt-2 text-slate-400">Four short steps. You'll get a reference straight away.</p>
+            <p className="mt-2 text-slate-400">Pick one or more services, answer a few relevant questions, review, send. You'll get a reference straight away.</p>
             <span className="mt-5 btn-primary">Start the quote request <ArrowRight size={16} /></span>
           </Link>
           {ch.voice_enabled && (

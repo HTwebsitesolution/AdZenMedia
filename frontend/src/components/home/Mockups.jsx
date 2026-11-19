@@ -1,5 +1,5 @@
 const Demo = ({ children }) => (
-  <span className="absolute -top-3 left-5 rounded-full bg-[#15171C] text-[#F4F1EA] text-[11px] px-3 py-1" data-testid="demo-label">{children || "Demonstration"}</span>
+  <span className="absolute -top-3 left-5 z-10 rounded-full bg-[#15171C] text-[#F4F1EA] text-[11px] px-3 py-1" data-testid="demo-label">{children || "Demonstration"}</span>
 );
 
 export const BrowserMock = () => (
@@ -22,7 +22,7 @@ export const BrowserMock = () => (
 );
 
 export const VideoStrip = () => (
-  <div className="relative flex gap-4 sm:gap-6 overflow-hidden" aria-hidden="true">
+  <div className="relative flex gap-4 sm:gap-6 pt-8 pb-2" aria-hidden="true">
     <Demo>Demonstration frames</Demo>
     {[["0–3s", "Hook", "#15171C"], ["3–12s", "Before / after", "#2247FF"], ["12–20s", "Offer + call to action", "#23262E"]].map(([t, label, bg], k) => (
       <div key={t} className="relative shrink-0 w-[30%] max-w-[220px] aspect-[9/16] rounded-[22px] p-4 flex flex-col justify-between text-[#F4F1EA]" style={{ background: bg, transform: `translateY(${k === 1 ? -18 : 0}px) rotate(${(k - 1) * 3}deg)` }}>

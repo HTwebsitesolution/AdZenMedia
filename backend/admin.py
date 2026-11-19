@@ -33,7 +33,8 @@ def _query(q, stage, service, channel, country, source, overdue, include_samples
     if stage:
         f["stage"] = stage
     if service:
-        f.setdefault("$and", []).append({"$or": [{"service": service}, {"services": service}]})
+        ids = [service] + [k for k, v in {"automation": "ai_automation", "portal": "software"}.items() if v == service]
+        f.setdefault("$and", []).append({"$or": [{"service": {"$in": ids}}, {"services": {"$in": ids}}]})
     if channel:
         f["channel"] = channel
     if country:

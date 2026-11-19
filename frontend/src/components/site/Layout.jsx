@@ -44,7 +44,7 @@ const Header = () => {
       </div>
       {open && (
         <nav className={`lg:hidden border-t container-x py-4 flex flex-col gap-3 ${onDark ? "bg-[#15171C] border-white/10" : "bg-[#F4F1EA] border-black/10"}`} aria-label="Mobile" data-testid="nav-mobile-menu">
-          {NAV.map(([to, label]) => <NavLink key={to} to={to} className={linkCls}>{label}</NavLink>)}
+          {NAV.map(([to, label]) => <NavLink key={to} to={to} className={linkCls} data-testid={`mobile-nav-${label.toLowerCase().replace(/\s/g, "-")}`}>{label}</NavLink>)}
         </nav>
       )}
     </header>
