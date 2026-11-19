@@ -1,5 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
-import { PROJECTS } from "@/lib/content";
+import { PORTFOLIO_APPROVED, PROJECTS } from "@/lib/content";
 
 const Visit = ({ url, name, text = "Visit site" }) => (
   <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold text-[#2247FF] hover:underline" aria-label={`Visit ${name} (opens in a new tab)`}>
@@ -29,7 +29,12 @@ export const ProjectCard = ({ p, large }) => {
               <div key={x.title} className="border-t border-black/15 pt-3">
                 <p className="font-semibold">{x.title}</p>
                 <p className="text-sm text-[#565a63] mt-1">{x.text}</p>
-                {x.shot && <img src={`/work/${x.shot}-d.webp`} alt="Oakrange customer portal public login screen" loading="lazy" className="mt-3 rounded-lg border border-black/10 aspect-[16/10] object-cover object-top" />}
+                {x.shot && (
+                  <figure className="mt-3">
+                    <img src={`/work/${x.shot}-d.webp`} alt="Oakrange customer portal, public sign-in page" loading="lazy" className="rounded-lg border border-black/10 aspect-[16/10] object-cover object-top" />
+                    <figcaption className="mt-1 text-xs text-[#565a63]" data-testid="portal-caption">Public sign-in page</figcaption>
+                  </figure>
+                )}
                 <div className="mt-2"><Visit url={x.url} name={`Oakrange ${x.title}`} text={x.shot ? "Visit portal" : "Visit site"} /></div>
               </div>
             ))}
@@ -41,8 +46,8 @@ export const ProjectCard = ({ p, large }) => {
   );
 };
 
-export const ReviewNote = () => (
+export const ReviewNote = () => (!PORTFOLIO_APPROVED && (
   <p className="rounded-xl border border-dashed border-black/30 px-4 py-3 text-sm text-[#3a3d45]" data-testid="portfolio-review-note">
     Review preview: project screenshots and descriptions are waiting for owner approval and are hidden on adzenmedia.com.
   </p>
-);
+));

@@ -149,6 +149,8 @@ export default function LeadDetail() {
         <h1 className="font-mono text-2xl text-amber-300" data-testid="lead-detail-reference">{lead.reference}</h1>
         <StageBadge stage={lead.stage} />
         {lead.is_sample && <span className="text-xs px-2 py-0.5 rounded bg-slate-600/40">SAMPLE</span>}
+        {lead.is_test && <span className="text-xs px-2 py-0.5 rounded bg-rose-500/20 text-rose-200" data-testid="lead-test-badge">TEST · excluded from reports</span>}
+        <button onClick={() => save({ is_test: !lead.is_test })} className="text-xs underline text-slate-400" data-testid="lead-toggle-test">{lead.is_test ? "Unmark test" : "Mark as test"}</button>
         <span className="text-sm text-slate-400">{lead.channel_label}</span>
       </div>
       <div className="flex flex-wrap gap-2" data-testid="lead-detail-services">

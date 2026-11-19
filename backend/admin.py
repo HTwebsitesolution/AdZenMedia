@@ -86,6 +86,7 @@ class LeadPatch(BaseModel):
     qualification: Optional[dict] = None
     proposal: Optional[dict] = None
     booking_status: Optional[Literal["none", "confirmed"]] = None
+    is_test: Optional[bool] = None
     country: Optional[Literal["United States", "Canada", "Other", ""]] = None
 
 
@@ -117,6 +118,8 @@ async def update_lead(lead_id: str, body: LeadPatch, admin: dict = Depends(requi
     if body.booking_status:
         s["booking"] = {"status": body.booking_status, "confirmed_by": "founder" if body.booking_status ==
                         "confirmed" else None, "at": iso()}
+    if body.is_test is not None:
+        s["is_test"] = body.is_test
     if body.country is not None:
         s["contact.country"] = body.country or None
     upd = {"$set": s}
@@ -244,7 +247,9 @@ CSV_COLS = ["reference", "created_at", "channel", "service_label", "stage", "nam
 
 @router.get("/export.csv")
 async def export_csv(include_samples: bool = False):
-    f = {} if include_samples else {"is_sample": {"$ne": True}}
+    f = {"is_test": {"$ne": True}}
+    if not include_samples:
+        f["is_sample"] = {"$ne": True}
     buf = io.StringIO()
     w = csv.writer(buf)
     w.writerow(CSV_COLS)
@@ -267,7 +272,9 @@ def _reached(lead: dict, stages: set) -> bool:
 
 @router.get("/reports")
 async def reports(include_samples: bool = True):
-    f = {} if include_samples else {"is_sample": {"$ne": True}}
+    f = {"is_test": {"$ne": True}}
+    if not include_samples:
+        f["is_sample"] = {"$ne": True}
     leads = await db.leads.find(f, {"_id": 0, "source": 1, "contact.country": 1, "stage": 1, "stage_history": 1,
                                     "booking": 1, "proposal": 1, "channel": 1}).to_list(10000)
 

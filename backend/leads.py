@@ -281,6 +281,8 @@ async def create_lead(body: LeadIn, request: Request):
                              "budget": body.budget.model_dump() if body.budget else None,
                              "check": body.check_answers},
                     contact_group_id=await contact_group_for(contact["email"]))
+    marker = f"{body.goal or ''} {body.message or ''} {contact['name']}".upper()
+    doc["is_test"] = "[TEST]" in marker
     try:
         lead = await insert_lead(doc)
     except DuplicateKeyError:
