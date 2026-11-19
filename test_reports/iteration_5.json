@@ -1,0 +1,29 @@
+{
+  "summary": "Iteration 5: portfolio publish + test-lead handling. Homepage/work at 1440 & 390: Selected Work (4) and /work (9) render, no portfolio-review-note, all labels exact (Boilable/Anto 'Client project', Habesha 'Publishing collaboration', Hana 'Co-created project' with co-author text), portal image loads with caption 'Public sign-in page', no horizontal overflow. BUT the portal screenshot file itself still contains the 'Looking for your calibration certificates?' popup/modal (not recaptured). UI Quote Wizard lead AZM-261119-GFPG created with [TEST] goal -> is_test=true automatically; outbox founder_notification + visitor_acknowledgment both 'sent' (mode test, sent_to delivered@resend.dev). Lead detail shows TEST badge + toggle (UI toggle off/on works, persists on reload); dashboard row shows TEST. Reports totals unchanged after TEST lead (7), CSV excludes it; PATCH is_test=false -> leads+1 and appears in CSV; back to true -> totals restored & excluded. PATCH 401 unauth / 403 member. Founder email href == APP_URL/founder/leads/<id>; unauthenticated open redirects to /sign-in; admin sees detail. Regression: nav Request a quote opens wizard; service page CTA prefills meta_ads. Existing suites 36/36 pass + new 4/4.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ProjectCard Oakrange portal shot (/work/portal-d.webp)", "issue": "Image still shows the portal-upgrade popup modal ('Looking for your calibration certificates?' / 'Access current portal' / 'Close this notice') over a blurred sign-in page. Requirement said recaptured with NO popup. File mtime 13:39 and served bytes identical (md5 3d2caad5...).", "selector": "[data-testid='portal-caption'] (sibling img)", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Founder lead detail", "issues": ["Follow-up date uses native browser date input (mm/dd/yyyy) instead of shadcn calendar (pre-existing)"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_test_leads.py", "/app/backend/tests/report_snapshot.py", "/app/test_reports/pytest/iteration_5_test_leads.xml", "/app/test_reports/pytest/iteration_5_regression.xml"],
+  "action_items": [
+    "Recapture /app/frontend/public/work/portal-d.webp (and portal-m.webp if used) AFTER dismissing the 'Close this notice' popup on oakrangeportal.co.uk/login",
+    "Optional: existing leads AZM-261119-MV2G ('TEST Meta Sample'), AZM-261119-VN8K ('Self Test'), AZM-261118-VKA9 ('Test User') are not flagged is_test (no '[TEST]' marker) and therefore count in reports/CSV; mark them as test or delete if they are leftover test data"
+  ],
+  "critical_code_review_comments": [
+    "is_test auto-marker is only applied in POST /api/leads; voice (retell) and admin manual leads never auto-flag (acceptable but note)",
+    "Marker is literal '[TEST]' only; names like 'TEST_ Wizard' used by regression suites are not flagged (those suites delete their own leads, so OK)",
+    "ReviewNote/showPortfolio host check is now dead code with PORTFOLIO_APPROVED=true; fine to keep as a kill switch"
+  ],
+  "updated_files": ["/app/backend/tests/test_test_leads.py", "/app/backend/tests/report_snapshot.py"],
+  "success_rate": {"backend": "100%", "frontend": "95% (portal image still has popup)"},
+  "seed_data_creation": "Kept lead AZM-261119-GFPG (id 2830bf7e-ceb3-4244-9211-b70ba02add1e, is_test=true, email htwebsitesolution+azmtest@gmail.com) as requested by owner. Regression suite leads were deleted by its own cleanup.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Kept TEST lead AZM-261119-GFPG is used by tests/test_test_leads.py (override with env TEST_LEAD_REF); test restores is_test=True. PATCH /api/admin/leads/{id} returns {lead, related, emails}. tests/report_snapshot.py <REF> prints report totals and CSV presence. Clerk API calls occasionally time out — just retry. Service page CTA testid is service-request-quote-btn. /api/leads is rate-limited 10/hour/IP."
+}
