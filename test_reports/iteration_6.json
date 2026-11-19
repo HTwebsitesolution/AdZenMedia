@@ -1,0 +1,18 @@
+{
+  "summary": "Narrow re-check of iteration_5 items. PASS: The Oakrange Customer portal image (figure with portal-caption 'Public sign-in page') on /work and on the homepage at 1440px in a fresh context shows the clean 'Welcome / Sign in to your account' page with no 'Looking for your calibration certificates?' popup. The image loaded at 1200x750. The served /work/portal-d.webp has md5 941f690755cdf75996180ba491fb0ac3 (new file), both with and without ?v=2, and is sent with Cache-Control no-store. All 4 test leads (GFPG TEST Owner Verification, MV2G TEST Meta Sample, VN8K Self Test, VKA9 Test User) have is_test=true. /api/admin/reports totals = 4 leads, which are only the 4 SAMPLE leads; the 'direct' source used by the test leads is absent. export.csv excludes them. The founder dashboard shows the TEST badge on all 4. DISCREPANCY: the brief says ProjectCard loads '/work/portal-d.webp?v=2', but ProjectCard.jsx line 34 still uses `/work/${x.shot}-d.webp` with no query string. The browser's currentSrc is /work/portal-d.webp. This is harmless here because the server sends no-store, but the stated cache-bust is not in the code.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/report_snapshot.py", "/app/backend/tests/clerk_ticket.py"],
+  "action_items": ["Optional: ProjectCard.jsx line 34 does not add the claimed ?v=2 cache-bust. Add it (e.g. `/work/${x.shot}-d.webp?v=2`) if a CDN or browser cache matters in production, or correct the claim."],
+  "critical_code_review_comments": ["ProjectCard portal <img> lacks width/height attributes (the main card images have them). Minor layout-shift risk."],
+  "updated_files": ["/app/test_reports/iteration_6.json"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "None. No data modified.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Use backend/tests/report_snapshot.py <names...> for report and is_test checks, and clerk_ticket.py for UI sign-in (/sign-in?__clerk_ticket=). 8 leads total: 4 TEST plus 4 SAMPLE."
+}

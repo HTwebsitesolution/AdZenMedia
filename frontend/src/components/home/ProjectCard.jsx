@@ -31,7 +31,7 @@ export const ProjectCard = ({ p, large }) => {
                 <p className="text-sm text-[#565a63] mt-1">{x.text}</p>
                 {x.shot && (
                   <figure className="mt-3">
-                    <img src={`/work/${x.shot}-d.webp`} alt="Oakrange customer portal, public sign-in page" loading="lazy" className="rounded-lg border border-black/10 aspect-[16/10] object-cover object-top" />
+                    <img src={`/work/${x.shot}-d.webp?v=2`} alt="Oakrange customer portal, public sign-in page" loading="lazy" className="rounded-lg border border-black/10 aspect-[16/10] object-cover object-top" />
                     <figcaption className="mt-1 text-xs text-[#565a63]" data-testid="portal-caption">Public sign-in page</figcaption>
                   </figure>
                 )}
