@@ -1,0 +1,31 @@
+{
+  "summary": "Frontend-only test of the hero artwork depth change (heroScene.js + HeroPoster.jsx), using Playwright on the public URL (adzen-systems--3h8xg6gr). All requested checks pass. 1440x800: data-render='3d', the canvas is present, scrollWidth is 1440, and the headline, all 3 CTAs, the mode switch and the pause button pass an elementFromPoint check (no overlap). Hero height stays 782px through web/marketing/ai, through 30 rapid clicks and after keyboard switching. aria-pressed and the caption update. ArrowRight/ArrowLeft move focus and mode and wrap at both ends. Screenshots show the browser window in front for Web, the phone in front for Marketing, and the chat bubbles and calendar in front for AI. After rapid switching the scene settles correctly and keeps animating. Pause makes two frames 1s apart pixel-identical, and resume animates again. Parallax was measured as a pixel diff of the canvas: noise 1.5; pointer at the artwork's top-left 11.7 and bottom-right 5.5; after moving back to the headline it settles to 0.34 from baseline; moving the pointer across the headline 1.09 (noise level). 390x844 with touch: 3D renders, the fine-pointer query is false so there is no parallax, reading order is headline > CTAs > canvas > mode switch > caption, scrollWidth is 390, height is constant across modes, and the focused objects come forward. Reduced motion at 1440 and 390: data-render='poster', poster shown, no canvas, no pause button; the poster transform and opacity change instantly per mode and height is constant. Quote flow: home-request-quote-btn opens /quote, the wizard completes with the website service, and reference AZM-261119-Y9HR is shown. It was found via GET /api/admin/leads (admin Clerk token), then deleted by id with its 2 outbox rows. /contact shows contact-quote-card and the short form (name/email/company/message). Console: no three.js errors, only Chromium 'GPU stall due to ReadPixels' warnings caused by the screenshots, plus a PostHog bot warning.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "HeroPoster (reduced motion), Web mode", "issues": ["SVG paint order is fixed (web, phone, chat, calendar), so the dimmed, unfocused chat bubbles at translate(30 300) scale(.75) are drawn over the bottom-left corner of the lifted web window (about x 852-904, y 483-503 at 1440). The focused object should be drawn last, e.g. render the focused <g> after the others."]},
+      {"screen": "Hero 3D on mobile 390", "issues": ["The pause button appears only when state becomes '3d'. On mobile it sits on its own row, so the hero grows about 32px after the scene loads (1133 -> 1165) and the sections below shift. This is not new (Hero.jsx is unchanged from the checkpoint), but it conflicts with the 'no layout shift' requirement. Reserve the row's height or render the button disabled while loading.", "On mobile the 360px canvas leaves a lot of empty space above and below the objects (this is cosmetic)."]},
+      {"screen": "Hero 3D desktop", "issues": ["Dark shadow patches from the ShadowMaterial backdrop show below and left of the artwork (about y 580-710). They read as smudges on the dark background. Consider lowering the shadow opacity or the backdrop's z."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/verify_hero_lead.py"],
+  "action_items": [
+    "Optional: in HeroPoster.jsx, render the focused group(s) last so they are always drawn on top (Web-mode chat overlap).",
+    "Optional: reserve the hero-pause-btn row's space on mobile to avoid the ~32px shift after the 3D scene loads.",
+    "Optional: tone down the backdrop shadow patches beneath the artwork."
+  ],
+  "critical_code_review_comments": [
+    "heroScene.js step(): M.slot.color.lerp(new THREE.Color(...)) allocates a Color every frame. Hoist the two target colors into constants.",
+    "The tween logic is correct: p is computed before 'tweening' is cleared, so the final frame lands exactly on target and then 'from' is cleared. A rapid setMode re-captures the current state, so switching never jumps.",
+    "Pointer listeners are attached only when '(hover: hover) and (pointer: fine)' matches and ignore pointerType other than mouse. They are removed in dispose(). This is correct.",
+    "Calling setMode during the intro tweens from the off-screen start positions and skips the per-object stagger delay. This is acceptable."
+  ],
+  "updated_files": ["/app/backend/tests/verify_hero_lead.py"],
+  "success_rate": {"backend": "N/A (skipped as requested)", "frontend": "100%"},
+  "seed_data_creation": "Created 1 lead, AZM-261119-Y9HR (TEST_ Hero Depth), through the UI. It was verified via the admin API and then deleted by id together with its 2 email_outbox rows. 'TEST Meta Sample' was not touched.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Use wait_until='load' rather than 'networkidle'; networkidle times out on '/'. Wait 5s for the intro. For mobile, reduced-motion or touch runs, create contexts with page.context.browser.new_context(...); their screenshots save to /app/.screenshots but are not attached inline. A canvas pixel diff with PIL (ImageChops) works well for parallax checks. verify_hero_lead.py <REF> [--delete] checks a lead via the admin API and deletes it by id. POST /api/leads is limited to 10/hour/IP."
+}
