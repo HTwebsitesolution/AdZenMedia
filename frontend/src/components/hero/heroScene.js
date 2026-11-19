@@ -101,6 +101,13 @@ function buildObjects(M) {
   return { web, ad, chat, cal };
 }
 
+// Objects lifted toward the viewer in each mode; the rest step back slightly.
+const FOCUS = { web: ["web"], marketing: ["ad"], ai: ["chat", "cal"] };
+const LIFT = 0.55;
+const SINK = -0.3;
+const TWEEN = 0.8;
+const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
 // Per-mode targets: [x, y, z, rotY, rotX, scale]
 const LAYOUTS = {
   web: { web: [-0.1, 0.15, 1.2, -0.18, 0.04, 1.12], ad: [2.75, -0.7, -0.6, -0.35, 0.05, 0.85], chat: [-2.9, 1.05, -1.1, 0.3, 0.1, 0.75], cal: [2.5, 1.55, -2.0, -0.3, 0.12, 0.7] },
@@ -128,6 +135,7 @@ export function createHeroScene(canvas, initialMode = "web") {
   key.shadow.mapSize.set(1024, 1024);
   Object.assign(key.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 25 });
   key.shadow.radius = 6;
+  key.shadow.bias = -0.0004;
   scene.add(key);
   const rim = new THREE.PointLight(C.blue, 40, 16, 2);
   rim.position.set(-4.5, 2.5, -2.5);
@@ -136,7 +144,7 @@ export function createHeroScene(canvas, initialMode = "web") {
   fillLight.position.set(3.5, -2.5, 4);
   scene.add(fillLight);
 
-  const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.16 }));
+  const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.2 }));
   backdrop.position.z = -3.2;
   backdrop.receiveShadow = true;
   scene.add(backdrop);
@@ -172,6 +180,20 @@ export function createHeroScene(canvas, initialMode = "web") {
   let modeAt = 0;
   let width = 1, height = 1, narrow = false;
   const pointer = { x: 0, y: 0 };
+  const smooth = { x: 0, y: 0 };
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  let tweening = false;
+  const state = {};
+  names.forEach((n) => {
+    const o = objs[n];
+    state[n] = { x: o.position.x, y: o.position.y, z: o.position.z, ry: o.rotation.y, rx: o.rotation.x, s: o.scale.x, from: null };
+  });
+
+  function target(n) {
+    const [x, y, z, ry, rx, sc] = LAYOUTS[mode][n];
+    const dz = FOCUS[mode].includes(n) ? LIFT : SINK;
+    return { x: x * (narrow ? 0.72 : 1), y, z: z + dz, ry, rx, s: sc * (FOCUS[mode].includes(n) ? 1.04 : 1) };
+  }
   const clock = new THREE.Clock();
   let running = true;
   let raf = 0;
@@ -188,24 +210,32 @@ export function createHeroScene(canvas, initialMode = "web") {
   }
 
   function step() {
-    const dt = Math.min(clock.getDelta(), 0.05);
+    const dt = Math.min(clock.getDelta(), 0.1);
     const t = clock.elapsedTime;
     const since = t - modeAt;
     const k = 1 - Math.exp(-dt * 3.6);
-    const layout = LAYOUTS[mode];
+    const keys = ["x", "y", "z", "ry", "rx", "s"];
+    const p = tweening ? easeInOut(Math.min(since / TWEEN, 1)) : 0;
+    if (tweening && since >= TWEEN) tweening = false;
+    smooth.x += (pointer.x - smooth.x) * (1 - Math.exp(-dt * 5));
+    smooth.y += (pointer.y - smooth.y) * (1 - Math.exp(-dt * 5));
     names.forEach((n) => {
       const o = objs[n];
-      if (t < o.userData.delay) return;
-      const [x, y, z, ry, rx, s] = layout[n];
-      const bob = Math.sin(t * 0.9 + o.userData.phase) * 0.06;
-      o.position.x += (x * (narrow ? 0.72 : 1) - o.position.x) * k;
-      o.position.y += (y + bob - o.position.y) * k;
-      o.position.z += (z - o.position.z) * k;
-      o.rotation.y += (ry - o.rotation.y) * k;
-      o.rotation.x += (rx - o.rotation.x) * k;
-      o.rotation.z += (0 - o.rotation.z) * k;
-      const sc = o.scale.x + (s - o.scale.x) * k;
-      o.scale.setScalar(sc);
+      const st = state[n];
+      const tg = target(n);
+      if (st.from && (tweening || p > 0)) {
+        keys.forEach((key) => { st[key] = st.from[key] + (tg[key] - st.from[key]) * p; });
+        if (!tweening) st.from = null;
+      } else if (t >= o.userData.delay) {
+        keys.forEach((key) => { st[key] += (tg[key] - st[key]) * k; });
+      } else {
+        return;
+      }
+      const depth = (st.z + 3) / 4.5;
+      const bob = Math.sin(t * 0.9 + o.userData.phase) * 0.05;
+      o.position.set(st.x + smooth.x * 0.14 * depth, st.y + bob - smooth.y * 0.1 * depth, st.z);
+      o.rotation.set(st.rx + smooth.y * 0.05, st.ry + smooth.x * 0.08, 0);
+      o.scale.setScalar(st.s);
     });
 
     // Web: content blocks build in sequence
@@ -236,8 +266,6 @@ export function createHeroScene(canvas, initialMode = "web") {
     chk.scale.setScalar(cs);
     chk.rotation.z = t * 0.8;
 
-    root.rotation.y += (pointer.x * 0.12 - root.rotation.y) * k;
-    root.rotation.x += (-pointer.y * 0.06 - root.rotation.x) * k;
     renderer.render(scene, camera);
   }
 
@@ -247,8 +275,11 @@ export function createHeroScene(canvas, initialMode = "web") {
     raf = requestAnimationFrame(loop);
   }
 
+  const area = canvas.parentElement;
+  function onLeave() { pointer.x = 0; pointer.y = 0; }
   function onPointer(e) {
-    const r = canvas.getBoundingClientRect();
+    if (e.pointerType !== "mouse") return;
+    const r = area.getBoundingClientRect();
     pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
     pointer.y = ((e.clientY - r.top) / r.height) * 2 - 1;
   }
@@ -256,14 +287,19 @@ export function createHeroScene(canvas, initialMode = "web") {
   resize();
   const ro = new ResizeObserver(resize);
   ro.observe(canvas.parentElement);
-  window.addEventListener("pointermove", onPointer, { passive: true });
+  if (finePointer) {
+    area.addEventListener("pointermove", onPointer, { passive: true });
+    area.addEventListener("pointerleave", onLeave);
+  }
   loop();
 
   return {
     setMode(m) {
       if (m === mode || !LAYOUTS[m]) return;
+      names.forEach((n) => { const st = state[n]; st.from = { x: st.x, y: st.y, z: st.z, ry: st.ry, rx: st.rx, s: st.s }; });
       mode = m;
       modeAt = clock.elapsedTime;
+      tweening = true;
     },
     pause() { running = false; cancelAnimationFrame(raf); },
     resume() { if (!running) { running = true; clock.getDelta(); loop(); } },
@@ -271,7 +307,8 @@ export function createHeroScene(canvas, initialMode = "web") {
       running = false;
       cancelAnimationFrame(raf);
       ro.disconnect();
-      window.removeEventListener("pointermove", onPointer);
+      area.removeEventListener("pointermove", onPointer);
+      area.removeEventListener("pointerleave", onLeave);
       scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
       Object.values(M).forEach((m) => m.dispose());
       renderer.dispose();
