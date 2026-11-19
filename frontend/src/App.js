@@ -7,8 +7,9 @@ import ClerkAuthProvider from "@/components/auth/ClerkAuthProvider";
 import { ConfigProvider } from "@/lib/config";
 import { Seo } from "@/components/site/Seo";
 import Home from "@/pages/Home";
-import { OfferPage, SolutionsHub } from "@/pages/Solutions";
-import { AboutPage, CaseStudyPage, NotFound, PrivacyPage, SectorPage, WorkPage } from "@/pages/InfoPages";
+import { LegacySolutionRedirect, ServicePage, ServicesHub } from "@/pages/Services";
+import { Navigate } from "react-router-dom";
+import { AboutPage, CaseStudyPage, IndustryPage, NotFound, PrivacyPage, WorkPage } from "@/pages/InfoPages";
 import ContactPage from "@/pages/Contact";
 import SystemsCheckPage, { QuotePage } from "@/pages/SystemsCheck";
 import QuoteWizard from "@/components/quote/QuoteWizard";
@@ -25,7 +26,7 @@ const AuthShell = () => (
   </ClerkAuthProvider>
 );
 
-const Centered = ({ children }) => <div className="min-h-screen flex items-center justify-center p-4">{children}</div>;
+const Centered = ({ children }) => <div className="dash min-h-screen flex items-center justify-center p-4">{children}</div>;
 
 function App() {
   return (
@@ -34,9 +35,12 @@ function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/solutions" element={<SolutionsHub />} />
-            <Route path="/solutions/:slug" element={<OfferPage />} />
-            <Route path="/industries/commercial-field-service" element={<SectorPage />} />
+            <Route path="/services" element={<ServicesHub />} />
+            <Route path="/services/:slug" element={<ServicePage />} />
+            <Route path="/solutions" element={<LegacySolutionRedirect />} />
+            <Route path="/solutions/:slug" element={<LegacySolutionRedirect />} />
+            <Route path="/industries/engineering-inspection-calibration" element={<IndustryPage />} />
+            <Route path="/industries/commercial-field-service" element={<Navigate to="/industries/engineering-inspection-calibration" replace />} />
             <Route path="/work" element={<WorkPage />} />
             <Route path="/work/:slug" element={<CaseStudyPage />} />
             <Route path="/about" element={<AboutPage />} />

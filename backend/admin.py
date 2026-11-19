@@ -33,7 +33,7 @@ def _query(q, stage, service, channel, country, source, overdue, include_samples
     if stage:
         f["stage"] = stage
     if service:
-        f["service"] = service
+        f.setdefault("$and", []).append({"$or": [{"service": service}, {"services": service}]})
     if channel:
         f["channel"] = channel
     if country:
@@ -199,7 +199,7 @@ async def create_manual_lead(body: ManualLeadIn):
     rows = [{"q": "Summary", "a": body.summary}]
     brief = {"headline": f"{CHANNEL_LABELS[body.channel].capitalize()}: {body.summary[:120]}", "rows": rows,
              "text": f"Summary: {body.summary}"}
-    doc = base_lead(body.channel, body.service, c, brief, source=(body.source or body.channel).lower(),
+    doc = base_lead(body.channel, body.service, c, brief, services=[body.service] if body.service else [], source=(body.source or body.channel).lower(),
                     attribution={}, contact_group_id=group, idempotency_key=None, entered_manually=True)
     doc.pop("idempotency_key")
     doc["formspree"] = {"status": "not_applicable"}

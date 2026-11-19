@@ -1,7 +1,7 @@
 import asyncio
 import secrets
 import uuid
-from typing import Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, HTTPException, Request
@@ -63,8 +63,9 @@ class LeadIn(BaseModel):
     channel: Literal["quote_wizard", "contact_form", "systems_check"]
     idempotency_key: str = Field(min_length=16, max_length=64)
     service: Optional[str] = None
+    services: list[str] = Field(default_factory=list, max_length=9)
     goal: Optional[str] = Field(default=None, max_length=2000)
-    answers: dict[str, Union[str, list[str]]] = Field(default_factory=dict)
+    answers: dict[str, Any] = Field(default_factory=dict)
     timing: Optional[str] = None
     budget: Optional[Budget] = None
     message: Optional[str] = Field(default=None, max_length=4000)
@@ -79,6 +80,24 @@ def _err(field: str, msg: str):
     raise HTTPException(status_code=422, detail=[{"loc": ["body", *field.split(".")], "msg": msg}])
 
 
+def _validate_answers(svc: str, ans: dict) -> None:
+    allowed = {q["id"]: q for q in QUESTIONS[svc]}
+    for k in ans:
+        if k not in allowed:
+            _err(f"answers.{svc}.{k}", "Unexpected question")
+    for q in allowed.values():
+        v = ans.get(q["id"])
+        empty = v is None or (isinstance(v, str) and not v.strip()) or (isinstance(v, list) and not v)
+        if q["required"] and empty:
+            _err(f"answers.{svc}.{q['id']}", f"Please answer: {q['label']}")
+        if not empty and q["type"] == "select" and v not in q["options"]:
+            _err(f"answers.{svc}.{q['id']}", "Choose one of the options")
+        if not empty and q["type"] == "multi" and (not isinstance(v, list) or any(x not in q["options"] for x in v)):
+            _err(f"answers.{svc}.{q['id']}", "Choose from the options")
+        if isinstance(v, str) and len(v) > 2000:
+            _err(f"answers.{svc}.{q['id']}", "Please keep this shorter")
+
+
 def validate_lead(body: LeadIn) -> None:
     if body.channel == "contact_form":
         if not body.message or len(body.message.strip()) < 5:
@@ -86,25 +105,21 @@ def validate_lead(body: LeadIn) -> None:
     if body.service is not None and body.service not in SERVICE_IDS:
         _err("service", "Choose one of the listed services")
     if body.channel == "quote_wizard":
-        if not body.service:
-            _err("service", "Choose what you need help with")
+        svcs = body.services
+        if not svcs:
+            _err("services", "Choose at least one service")
+        if len(set(svcs)) != len(svcs) or any(x not in SERVICE_IDS for x in svcs):
+            _err("services", "Choose from the listed services")
+        if "not_sure" in svcs and len(svcs) > 1:
+            _err("services", "Choose services or 'Not sure yet', not both")
         if not body.goal or len(body.goal.strip()) < 5:
-            _err("goal", "Tell us briefly what you want to improve")
-        allowed = {q["id"]: q for q in QUESTIONS[body.service]}
+            _err("goal", "Tell us briefly what you want to achieve")
         for k in body.answers:
-            if k not in allowed:
-                _err(f"answers.{k}", "Unexpected question")
-        for q in allowed.values():
-            v = body.answers.get(q["id"])
-            empty = v is None or (isinstance(v, str) and not v.strip()) or (isinstance(v, list) and not v)
-            if q["required"] and empty:
-                _err(f"answers.{q['id']}", f"Please answer: {q['label']}")
-            if not empty and q["type"] == "select" and v not in q["options"]:
-                _err(f"answers.{q['id']}", "Choose one of the options")
-            if not empty and q["type"] == "multi" and (not isinstance(v, list) or any(x not in q["options"] for x in v)):
-                _err(f"answers.{q['id']}", "Choose from the options")
-            if isinstance(v, str) and len(v) > 2000:
-                _err(f"answers.{q['id']}", "Please keep this shorter")
+            if k not in svcs or not isinstance(body.answers[k], dict):
+                _err(f"answers.{k}", "Unexpected answers")
+        for svc in svcs:
+            _validate_answers(svc, body.answers.get(svc) or {})
+
         if body.timing and body.timing not in TIMING:
             _err("timing", "Choose a timing option")
         if body.budget:
@@ -137,13 +152,17 @@ def build_brief(body: LeadIn) -> dict:
     rows = []
     headline = ""
     if body.channel == "quote_wizard":
-        headline = f"{SERVICE_LABELS[body.service]}: {body.goal.strip()[:140]}"
-        rows.append({"q": "Service", "a": SERVICE_LABELS[body.service]})
+        labels = [SERVICE_LABELS[x] for x in body.services]
+        headline = f"{' + '.join(labels)}: {body.goal.strip()[:120]}"
+        rows.append({"q": "Services", "a": ", ".join(labels)})
         rows.append({"q": "Goal", "a": body.goal.strip()})
-        for q in QUESTIONS[body.service]:
-            v = body.answers.get(q["id"])
-            if v:
-                rows.append({"q": q["label"], "a": ", ".join(v) if isinstance(v, list) else v.strip()})
+        for svc in body.services:
+            ans = body.answers.get(svc) or {}
+            for q in QUESTIONS[svc]:
+                v = ans.get(q["id"])
+                if v:
+                    rows.append({"q": f"{SERVICE_LABELS[svc]} · {q['label']}", "section": svc,
+                                 "a": ", ".join(v) if isinstance(v, list) else v.strip()})
         rows.append({"q": "Timing", "a": body.timing or "Not given"})
         b = body.budget
         rows.append({"q": "Budget", "a": f"{b.range}{' (' + b.currency + ')' if b.currency else ''}" if b else "Not given"})
@@ -248,11 +267,17 @@ async def create_lead(body: LeadIn, request: Request):
     validate_lead(body)
     brief = build_brief(body)
     contact = body.contact.model_dump()
-    doc = base_lead(body.channel, body.service or (evaluate_check(body.check_answers)["service"]
-                                                   if body.channel == "systems_check" else None),
-                    contact, brief, idempotency_key=body.idempotency_key,
+    if body.channel == "quote_wizard":
+        services = body.services
+    elif body.channel == "systems_check":
+        services = [evaluate_check(body.check_answers)["service"]]
+    else:
+        services = [body.service] if body.service else []
+    doc = base_lead(body.channel, services[0] if services else None,
+                    contact, brief, idempotency_key=body.idempotency_key, services=services,
+                    service_label=", ".join(SERVICE_LABELS[x] for x in services),
                     attribution=body.attribution.model_dump(), source=derive_source(body.attribution),
-                    answers={"goal": body.goal, **body.answers, "timing": body.timing,
+                    answers={"goal": body.goal, "by_service": body.answers, "timing": body.timing,
                              "budget": body.budget.model_dump() if body.budget else None,
                              "check": body.check_answers},
                     contact_group_id=await contact_group_for(contact["email"]))

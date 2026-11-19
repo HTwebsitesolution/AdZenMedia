@@ -34,7 +34,7 @@ export const ManualLeadDialog = ({ onCreated }) => {
       <DialogTrigger asChild>
         <button className="btn-primary !py-2 text-sm" data-testid="manual-lead-btn"><Plus size={16} /> Add inquiry</button>
       </DialogTrigger>
-      <DialogContent className="bg-[#131924] border-white/10 max-w-lg">
+      <DialogContent className="dash bg-[#131924] text-white border-white/10 max-w-lg">
         <DialogHeader><DialogTitle>Log a phone, WhatsApp or email inquiry</DialogTitle></DialogHeader>
         <form onSubmit={save} className="space-y-3" data-testid="manual-lead-form">
           <div className="grid grid-cols-2 gap-3">

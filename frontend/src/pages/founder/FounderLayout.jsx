@@ -17,10 +17,10 @@ const Gate = () => {
   const [me, setMe] = useState(null);
   const [err, setErr] = useState("");
   useEffect(() => { call("get", "/me").then(setMe).catch((e) => setErr(e?.response?.data?.detail || "Could not verify access")); }, [call]);
-  if (err) return <p className="p-10 text-rose-300" data-testid="founder-access-error">{err}</p>;
-  if (!me) return <p className="p-10 text-slate-400">Checking access…</p>;
+  if (err) return <p className="dash min-h-screen p-10 text-rose-300" data-testid="founder-access-error">{err}</p>;
+  if (!me) return <p className="dash min-h-screen p-10 text-slate-400">Checking access…</p>;
   if (me.role !== "admin") return (
-    <div className="p-10 max-w-lg" data-testid="founder-access-restricted">
+    <div className="dash min-h-screen p-10" data-testid="founder-access-restricted">
       <h1 className="text-2xl font-bold">Access restricted</h1>
       <p className="mt-2 text-slate-400">This dashboard is for the AdZenMedia founder only. Signed in as {me.email}.</p>
       <div className="mt-6"><UserButton /></div>
@@ -28,7 +28,7 @@ const Gate = () => {
   );
   const link = ({ isActive }) => `px-3 py-2 rounded-md text-sm ${isActive ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"}`;
   return (
-    <div className="min-h-screen">
+    <div className="dash min-h-screen">
       <header className="border-b border-white/10 bg-[#0A0D12]/90 sticky top-0 z-40 backdrop-blur">
         <div className="max-w-[1400px] mx-auto px-4 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">

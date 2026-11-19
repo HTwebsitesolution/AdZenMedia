@@ -149,7 +149,13 @@ export default function LeadDetail() {
         <h1 className="font-mono text-2xl text-amber-300" data-testid="lead-detail-reference">{lead.reference}</h1>
         <StageBadge stage={lead.stage} />
         {lead.is_sample && <span className="text-xs px-2 py-0.5 rounded bg-slate-600/40">SAMPLE</span>}
-        <span className="text-sm text-slate-400">{lead.channel_label} · {lead.service_label || "No service"}</span>
+        <span className="text-sm text-slate-400">{lead.channel_label}</span>
+      </div>
+      <div className="flex flex-wrap gap-2" data-testid="lead-detail-services">
+        {(lead.services?.length ? lead.services : [lead.service].filter(Boolean)).map((x, i) => (
+          <span key={x} className="px-2.5 py-1 rounded-full text-xs bg-amber-400/15 text-amber-200">{(lead.service_label || "").split(", ")[i] || x}</span>
+        ))}
+        {!lead.service && !lead.services?.length && <span className="text-xs text-slate-500">No service selected</span>}
       </div>
       <h2 className="text-xl font-semibold">{lead.brief?.headline}</h2>
       <div className="grid lg:grid-cols-3 gap-5">

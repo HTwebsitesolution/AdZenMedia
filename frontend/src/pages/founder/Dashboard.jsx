@@ -84,7 +84,7 @@ export default function Dashboard() {
               <tr key={l.id} className="hover:bg-white/[0.03]" data-testid={`lead-row-${l.reference}`}>
                 <td className="px-4 py-3 font-mono"><Link to={`/founder/leads/${l.id}`} className="text-amber-300 hover:underline">{l.reference}</Link>{l.is_sample && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-slate-600/40 text-slate-300">SAMPLE</span>}</td>
                 <td className="px-4 py-3"><div className="font-medium">{l.contact?.name}</div><div className="text-slate-500 text-xs">{l.contact?.company}</div></td>
-                <td className="px-4 py-3 max-w-xs truncate text-slate-300">{l.brief?.headline}</td>
+                <td className="px-4 py-3 max-w-xs"><div className="truncate text-slate-300">{l.brief?.headline}</div><div className="truncate text-xs text-amber-200/80" data-testid="lead-row-services">{l.service_label}</div></td>
                 <td className="px-4 py-3 text-slate-400">{l.channel_label}</td>
                 <td className="px-4 py-3 text-slate-400">{l.source}</td>
                 <td className="px-4 py-3 text-slate-400">{l.contact?.country || "–"}</td>

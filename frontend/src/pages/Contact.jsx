@@ -24,12 +24,30 @@ const Channels = ({ ch }) => {
     ch.phone && { icon: Phone, title: "Phone", desc: ch.phone, href: telLink(ch.phone), channel: "phone", testid: "channel-phone" },
     ch.booking_url && { icon: CalendarClock, title: "Book a call", desc: "Times shown in your local time zone", href: ch.booking_url, channel: "calendar", testid: "channel-calendar", external: true },
   ].filter(Boolean);
-  if (!list.length && !avail) return null;
+  const preview = window.location.hostname.replace(/^www\./, "") !== "adzenmedia.com";
+  const pending = [
+    [!ch.whatsapp_number, "Chat on WhatsApp", "verified WhatsApp Business number"],
+    [!ch.whatsapp_call_enabled, "Call on WhatsApp", "verified number with calling enabled"],
+    [!ch.voice_enabled, "Talk to our AI assistant", "Retell key, agent and retention settings"],
+    [!ch.email, "Email", "monitored public address"],
+    [!ch.phone, "Phone", "click-to-call number"],
+    [!ch.booking_url, "Book a call", "booking link"],
+  ].filter(([missing]) => missing);
+  if (!list.length && !avail && !(preview && pending.length)) return null;
   return (
     <div className="space-y-3" data-testid="contact-channels">
-      <h2 className="text-xl font-semibold">Other ways to reach us</h2>
+      {(list.length > 0 || avail) && <h2 className="font-display text-2xl font-bold">Other ways to reach us</h2>}
       <div className="grid sm:grid-cols-2 gap-3">{list.map((c) => <Channel key={c.testid} {...c} />)}</div>
       {avail && <p className="text-sm text-slate-400" data-testid="contact-availability">Available: {avail}</p>}
+      {preview && pending.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-dashed border-black/25 p-5" data-testid="contact-pending-channels">
+          <p className="font-semibold">Preview only: channels awaiting owner setup</p>
+          <p className="text-sm text-slate-500">Hidden on adzenmedia.com until configured.</p>
+          <ul className="mt-3 grid sm:grid-cols-2 gap-2 text-sm">
+            {pending.map(([, name, need]) => <li key={name} data-testid={`pending-${name.toLowerCase().replace(/[^a-z]+/g, "-")}`}><span className="font-semibold">{name}</span> <span className="text-slate-500">· needs {need}</span></li>)}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
@@ -41,7 +59,7 @@ export default function ContactPage() {
     <>
       <Seo title="Contact" description="Request a quote, ask a quick question, or reach AdZenMedia by WhatsApp, email, phone or a booked call." />
       <PageHero eyebrow="Contact" title="Tell us what you need.">
-        The quickest route is the quote request. For anything else, send a short question and Joseph will reply personally.
+        The quickest route is the quote request: pick one or more services. For anything else, send a short question and Joseph will reply personally.
       </PageHero>
       <section className="container-x py-14 grid lg:grid-cols-12 gap-10">
         <div className="lg:col-span-5 space-y-6">

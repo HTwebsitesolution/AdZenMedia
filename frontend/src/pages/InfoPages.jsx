@@ -3,53 +3,49 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Seo } from "@/components/site/Seo";
 import { CtaBand, PageHero, QuoteCta, Section } from "@/components/site/Blocks";
-import { SECTOR_PROBLEMS, offerBySlug } from "@/lib/content";
+import { PortalMock } from "@/components/home/Mockups";
 import { api } from "@/lib/api";
 import { useConfig } from "@/lib/config";
 
-export function SectorPage() {
+const INDUSTRY_PROBLEMS = [
+  ["Slow quote follow-up", "Quotes go out, then sit in an inbox.", "ai-automation-agents", "Automate reminders and follow-up drafts, with a person approving what's sent."],
+  ["Repeated requests for certificates and reports", "The office answers the same 'please send the latest certificate' email every day.", "custom-software-portals-saas", "A portal where customers download their own documents, or QR verification printed on each certificate."],
+  ["Customers with many sites", "Facility managers can't see what was inspected, where and when.", "custom-software-portals-saas", "Site-level permissions so each contact sees the right locations."],
+];
+
+export function IndustryPage() {
   return (
     <>
-      <Seo title="Digital systems for commercial field-service companies" description="Inquiry systems, quote follow-up automation and customer portals for inspection, testing, calibration and multi-location service providers in the US and Canada." />
-      <PageHero eyebrow="Commercial field service · US & Canada" title="Less chasing. Faster quotes. Customers who can find their own records." actions={<><QuoteCta testid="sector-request-quote-btn" /><Link to="/systems-check" className="btn-secondary" data-testid="sector-check-btn">Take the systems check</Link></>}>
-        For inspection, testing and calibration companies and multi-location service providers. The admin around the work slows you down more than the work itself.
+      <Seo title="Engineering, inspection and calibration" description="How AdZenMedia's portals, automation and websites apply to engineering, inspection, testing and calibration companies in the US and Canada." />
+      <PageHero eyebrow="Industry example" title="Engineering, inspection and calibration" actions={<QuoteCta testid="industry-request-quote-btn" />}>
+        One of the industries we've delivered for. Here's how the same systems apply to providers in the US and Canada.
       </PageHero>
-      <Section eyebrow="Where time goes" title="Three problems we see again and again.">
-        <div className="space-y-6">
-          {SECTOR_PROBLEMS.map((p, idx) => (
-            <article key={p.problem} className="surface p-7 sm:p-9 grid lg:grid-cols-12 gap-6" data-testid={`sector-problem-${idx}`}>
-              <div className="lg:col-span-5">
-                <span className="font-mono text-xs text-amber-400">PROBLEM 0{idx + 1}</span>
-                <h3 className="mt-2 text-xl font-semibold">{p.problem}</h3>
-                <p className="mt-2 text-slate-400">{p.detail}</p>
-              </div>
-              <ul className="lg:col-span-7 space-y-4">
-                {p.fix.map(([slug, text]) => (
-                  <li key={slug} className="border-l-2 border-amber-400/50 pl-4">
-                    <Link to={`/solutions/${slug}`} className="text-sm font-semibold text-amber-300 hover:text-amber-200">{offerBySlug(slug).name}</Link>
-                    <p className="text-slate-300 mt-1">{text}</p>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </Section>
-      <Section eyebrow="Both markets" title="One approach for US and Canadian providers.">
-        <p className="text-slate-300 max-w-3xl">We work with businesses across the United States and Canada. Quotes state the currency, USD or CAD, and we keep your customers' data with providers you approve.</p>
-      </Section>
+      <section className="container-x py-12 space-y-0 border-t border-black/10">
+        {INDUSTRY_PROBLEMS.map(([p, d, slug, fix]) => (
+          <article key={p} className="grid lg:grid-cols-12 gap-6 py-10 border-b border-black/10" data-testid="industry-problem">
+            <div className="lg:col-span-6"><h2 className="font-display text-2xl sm:text-3xl font-bold">{p}</h2><p className="mt-2 text-[#565a63]">{d}</p></div>
+            <div className="lg:col-span-6"><p className="text-lg text-[#3a3d45]">{fix}</p><Link to={`/services/${slug}`} className="mt-3 inline-flex items-center gap-1 text-[#2247FF] font-semibold">Related service <ArrowRight size={14} /></Link></div>
+          </article>
+        ))}
+      </section>
       <CtaBand />
     </>
   );
 }
 
-const PATTERNS = [
-  { tag: "CUSTOMER PORTAL · UK", title: "Self-service records for a multi-site inspection and testing provider",
+const PROJECTS = [
+  { tag: "Custom software · UK", title: "Customer portal for a multi-site inspection and testing provider", visual: true,
     before: "Customers emailed the office for inspection reports and certificates across their sites.",
     lesson: "If your customers manage several locations, permissioned access to their own records removes a recurring office task and makes you easier to keep." },
-  { tag: "QR VERIFICATION · UK", title: "Certificates that verify themselves",
+  { tag: "AI automation · UK", title: "QR codes that let anyone verify a certificate",
     before: "Third parties phoned or emailed to confirm a certificate was genuine and current.",
-    lesson: "Any business that issues certificates or reports can let the document prove itself, from calibration labs to equipment testers." },
+    lesson: "Any business that issues documents can let the document prove itself, with no phone call needed." },
+];
+
+const DEMOS = [
+  ["Meta lead to booked appointment", "Interactive walkthrough with sample data", "/services/meta-lead-generation-ai-follow-up"],
+  ["AI receptionist booking", "Demonstration conversation and calendar", "/services/ai-appointment-booking"],
+  ["Short-form video structure", "Demonstration frames", "/services/social-media-video-editing"],
 ];
 
 export function WorkPage() {
@@ -57,34 +53,44 @@ export function WorkPage() {
   useEffect(() => { api.get("/public/case-studies").then((r) => setItems(r.data.items)).catch(() => {}); }, []);
   return (
     <>
-      <Seo title="Work" description="Customer portal and certificate verification workflows built for service businesses, and what US and Canadian providers can learn from them." />
-      <PageHero eyebrow="Work" title="Workflows we've built, and what they teach.">
-        These projects were delivered for service businesses in the United Kingdom. Client names and full results are shared only with each client's approval.
+      <Seo title="Work" description="Client projects and labeled demonstrations from AdZenMedia: customer portals, certificate verification, AI follow-up and booking, and social video." />
+      <PageHero eyebrow="Work" title="Projects, and what they teach.">
+        Client names and full results are shared only with each client's approval. Demonstrations are labeled as such.
       </PageHero>
-      <Section>
-        <div className="grid lg:grid-cols-2 gap-6">
-          {PATTERNS.map((p) => (
-            <article key={p.tag} className="surface p-7 sm:p-9" data-testid="work-pattern-card">
-              <span className="font-mono text-xs text-slate-500">{p.tag}</span>
-              <h2 className="mt-2 text-xl font-semibold">{p.title}</h2>
-              <p className="mt-4 text-sm text-slate-500 uppercase tracking-wider font-mono">Before</p>
-              <p className="text-slate-300">{p.before}</p>
-              <p className="mt-4 text-sm text-slate-500 uppercase tracking-wider font-mono">What you can learn</p>
-              <p className="text-slate-300">{p.lesson}</p>
-            </article>
-          ))}
-        </div>
+      <section className="container-x py-12 space-y-16">
+        {PROJECTS.map((p) => (
+          <article key={p.title} className="grid lg:grid-cols-12 gap-10 items-center" data-testid="work-pattern-card">
+            <div className="lg:col-span-5">
+              <p className="kicker">{p.tag}</p>
+              <h2 className="mt-2 font-display text-3xl sm:text-4xl font-bold tracking-[-0.02em] leading-tight">{p.title}</h2>
+              <p className="mt-5 font-semibold">Before</p><p className="text-[#3a3d45]">{p.before}</p>
+              <p className="mt-4 font-semibold">What other businesses can learn</p><p className="text-[#3a3d45]">{p.lesson}</p>
+            </div>
+            <div className="lg:col-span-7">{p.visual ? <PortalMock /> : (
+              <div className="paper-card p-8 flex items-center gap-6" aria-hidden="true">
+                <div className="grid grid-cols-5 gap-1 w-24 h-24 shrink-0">{Array.from({ length: 25 }).map((_, k) => <span key={k} className={(k * 7) % 3 ? "bg-[#15171C]" : "bg-transparent"} />)}</div>
+                <div><p className="font-semibold">Certificate status: Valid</p><p className="text-sm text-[#565a63]">Representative verification view</p></div>
+              </div>)}
+            </div>
+          </article>
+        ))}
         {items.length > 0 && (
-          <div className="mt-12 space-y-4" data-testid="work-case-studies">
-            <h2 className="text-2xl font-bold">Case studies</h2>
-            {items.map((c) => (
-              <Link key={c.slug} to={`/work/${c.slug}`} className="surface p-6 flex justify-between hover:border-amber-400/40">
-                <span className="font-semibold">{c.title}</span><ArrowRight size={16} />
-              </Link>
-            ))}
+          <div className="space-y-3" data-testid="work-case-studies">
+            <h2 className="font-display text-3xl font-bold">Case studies</h2>
+            {items.map((c) => <Link key={c.slug} to={`/work/${c.slug}`} className="surface p-6 flex justify-between hover:border-[#2247FF]"><span className="font-semibold">{c.title}</span><ArrowRight size={16} /></Link>)}
           </div>
         )}
-      </Section>
+        <div data-testid="work-demos">
+          <h2 className="font-display text-3xl font-bold">Demonstrations</h2>
+          <p className="mt-2 text-[#565a63]">Built with sample data to show how a system works before live client evidence is available.</p>
+          <ul className="mt-6 border-t border-black/15">
+            {DEMOS.map(([t, d, to]) => (
+              <li key={t} className="border-b border-black/15"><Link to={to} className="py-5 flex justify-between gap-4 group"><span className="font-display text-xl sm:text-2xl font-bold group-hover:text-[#2247FF]">{t}</span><span className="text-[#565a63] text-right">{d}</span></Link></li>
+            ))}
+          </ul>
+        </div>
+        <p className="text-[#565a63]">Work in engineering, inspection or calibration? <Link to="/industries/engineering-inspection-calibration" className="text-[#2247FF] underline underline-offset-4" data-testid="work-industry-link">See how these systems apply</Link>.</p>
+      </section>
       <CtaBand />
     </>
   );
@@ -93,11 +99,11 @@ export function WorkPage() {
 export const CaseStudyBody = ({ c }) => (
   <div className="space-y-8 max-w-3xl">
     {[["Context", `${c.client_display_public} · ${c.context}`], ["The problem", c.summary], ["Before", c.prior_process],
-      ["What we delivered", c.delivered], ["Verified outcome", c.verified_outcome], ["What other service businesses can learn", c.lessons]]
+      ["What we delivered", c.delivered], ["Verified outcome", c.verified_outcome], ["What other businesses can learn", c.lessons]]
       .map(([h, t]) => (
         <div key={h}>
           <h2 className="eyebrow">{h}</h2>
-          <p className="mt-2 text-slate-300 text-lg leading-relaxed">{t}</p>
+          <p className="mt-2 text-lg leading-relaxed">{t}</p>
         </div>
       ))}
   </div>
@@ -110,7 +116,7 @@ export function CaseStudyPage() {
     api.get("/public/case-studies").then((r) => setState({ loading: false, c: r.data.items.find((x) => x.slug === slug) }))
       .catch(() => setState({ loading: false, c: null }));
   }, [slug]);
-  if (state.loading) return <div className="container-x py-24 text-slate-400">Loading…</div>;
+  if (state.loading) return <div className="container-x py-24 text-[#565a63]">Loading…</div>;
   if (!state.c) return <Navigate to="/work" replace />;
   return (
     <>
@@ -127,25 +133,23 @@ export function AboutPage() {
   const location = cfg?.founder?.location;
   return (
     <>
-      <Seo title="About" description="AdZenMedia is a founder-led digital systems partner for service businesses in the US and Canada, led by Joseph Afolabi." />
+      <Seo title="About" description="AdZenMedia is a founder-led digital, marketing and AI agency for businesses in the US and Canada, led by Joseph Afolabi." />
       <PageHero eyebrow="About" title="Founder-led, from first call to handover.">
-        AdZenMedia is led by Joseph Afolabi. You speak with the person who scopes, builds and trains, not an account manager.
+        AdZenMedia is a digital, marketing and AI agency led by Joseph Afolabi. You work with the person who scopes, builds and trains, not an account manager.
       </PageHero>
-      <Section>
-        <div className="grid lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-7 space-y-5 text-slate-300 text-lg leading-relaxed">
-            <p>Joseph has built websites, customer portals and workflow tools for service businesses, including inspection and testing providers in the United Kingdom.</p>
-            <p>AdZenMedia brings that work to service businesses in the United States and Canada, starting with commercial field-service companies and staying open to other B2B firms.</p>
-            <p className="font-editorial italic text-2xl text-white">"Start with one workflow, measure it, and only build more when it works."</p>
-          </div>
-          <dl className="lg:col-span-5 surface p-7 space-y-5 self-start" data-testid="about-facts">
-            <div><dt className="eyebrow">Founder</dt><dd className="mt-1">Joseph Afolabi</dd></div>
-            {location && <div data-testid="about-location"><dt className="eyebrow">Based in</dt><dd className="mt-1">{location}</dd></div>}
-            <div><dt className="eyebrow">Works with</dt><dd className="mt-1">Service businesses in the US and Canada</dd></div>
-            <div><dt className="eyebrow">How we work</dt><dd className="mt-1">Written scopes, agreed measures, training at handover</dd></div>
-          </dl>
+      <section className="container-x py-16 grid lg:grid-cols-12 gap-12">
+        <div className="lg:col-span-7 space-y-5 text-lg leading-relaxed text-[#3a3d45]">
+          <p>We design websites, create social content and video, run Facebook and Instagram campaigns, build AI systems that follow up with leads and book appointments, develop custom software, and train teams to use all of it.</p>
+          <p>We work with businesses across industries in the United States and Canada. Past work includes customer portals and certificate verification for service providers in the United Kingdom.</p>
+          <p className="font-display text-3xl sm:text-4xl font-bold text-[#15171C] tracking-[-0.02em] leading-tight pt-4">"Start with one thing that matters, measure it, and build more only when it works."</p>
         </div>
-      </Section>
+        <dl className="lg:col-span-5 space-y-6 self-start border-t border-black/15 pt-6" data-testid="about-facts">
+          <div><dt className="kicker">Founder</dt><dd className="mt-1 text-lg">Joseph Afolabi</dd></div>
+          {location && <div data-testid="about-location"><dt className="kicker">Based in</dt><dd className="mt-1 text-lg">{location}</dd></div>}
+          <div><dt className="kicker">Clients</dt><dd className="mt-1 text-lg">Businesses in the US and Canada, across industries</dd></div>
+          <div><dt className="kicker">How we work</dt><dd className="mt-1 text-lg">Written scopes, agreed measures, training at handover</dd></div>
+        </dl>
+      </section>
       <CtaBand />
     </>
   );
@@ -155,17 +159,15 @@ export function PrivacyPage() {
   return (
     <>
       <Seo title="Privacy (draft)" description="Draft privacy information for AdZenMedia." noindex />
-      <PageHero eyebrow="Draft for owner review" title="Privacy information">
-        This draft is waiting for review and is not legal advice.
-      </PageHero>
+      <PageHero eyebrow="Draft for owner review" title="Privacy information">This draft is waiting for review and is not legal advice.</PageHero>
       <Section>
-        <div className="max-w-3xl space-y-6 text-slate-300" data-testid="privacy-draft">
-          {[["What we collect", "The details you send through our forms (name, email, company, and optionally country, website and phone), your answers, the page you arrived on and campaign source tags. We don't use advertising trackers."],
+        <div className="max-w-3xl space-y-6 text-[#3a3d45]" data-testid="privacy-draft">
+          {[["What we collect", "The details you send through our forms (name, email, company, and optionally country, website and phone), your answers, the page you arrived on and campaign source tags. We don't use advertising trackers on this site without approval."],
             ["Why", "To reply to your inquiry, prepare a scoped quote, and follow up on it. We count page actions such as form starts and contact clicks without personal details."],
             ["Who processes it", "Our database host, our email provider for confirmations, and, if enabled, a form backup service. If you choose the AI voice assistant, the call is processed by our voice provider; we keep only a short summary and the contact details you agree to share, not audio or transcripts."],
             ["How long we keep it", "[Owner to confirm retention period] Inquiries that don't become projects are deleted after the agreed period."],
             ["Your choices", "You can ask to see, correct or delete your information by contacting us. [Owner to add monitored contact address and applicable US state and Canadian (PIPEDA) wording.]"]]
-            .map(([h, t]) => (<div key={h}><h2 className="text-lg font-semibold text-white">{h}</h2><p className="mt-2">{t}</p></div>))}
+            .map(([h, t]) => (<div key={h}><h2 className="font-display text-xl font-bold text-[#15171C]">{h}</h2><p className="mt-2">{t}</p></div>))}
         </div>
       </Section>
     </>
@@ -176,8 +178,8 @@ export function NotFound() {
   return (
     <div className="container-x py-32">
       <Seo title="Page not found" noindex />
-      <h1 className="text-4xl font-bold">Page not found</h1>
-      <Link to="/" className="mt-6 inline-block text-amber-300">Back to home</Link>
+      <h1 className="font-display text-5xl font-bold">Page not found</h1>
+      <Link to="/" className="mt-6 inline-block text-[#2247FF]">Back to home</Link>
     </div>
   );
 }
