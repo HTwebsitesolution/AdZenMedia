@@ -155,7 +155,7 @@ def founder_email(lead: dict) -> tuple[str, str]:
     c = lead["contact"]
     site = app_url()
     subject = f"New {lead['channel_label']} · {lead['reference']} · {c.get('company') or c.get('name')}"
-    inner = (f'<p style="font-size:13px;color:#b45309;font-weight:bold">{escape(lead["reference"])}</p>'
+    inner = (f'<p style="font-size:13px;color:#2D4BFF;font-weight:bold">{escape(lead["reference"])}</p>'
              f'<h2 style="margin:0 0 12px">{escape(lead["brief"]["headline"])}</h2>'
              f'<p><strong>{escape(c.get("name", ""))}</strong>, {escape(c.get("company", ""))}<br>'
              f'{escape(c.get("email", ""))} {escape(c.get("phone", ""))}<br>{escape(c.get("country", ""))}</p>'

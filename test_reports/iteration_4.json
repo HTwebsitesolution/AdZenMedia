@@ -1,0 +1,32 @@
+{
+  "summary": "Iteration 4 (enhancement pass) tested on the public URL (adzen-systems--3h8xg6gr; the cc90a1ee host serves the same build and is APP_URL). All requested checks pass. HOMEPAGE 1440x800: data-render=3d; scrollWidth 1440; Web/Marketing/AI set aria-pressed and change hero-screen-label ('On screen: Inspired by Nicola (client website)' / 'On screen: Pilates Barn site with a demo ad overlay' / 'Demo workflow, sample data'). Screenshots show the Nicola capture in the browser and Pilates Barn with the DEMO AD label on the phone. home-selected-work has portfolio-review-note and 4 cards (nicola, pilates, dala, oakrange). All 9 images have naturalWidth>0. Every Visit site link has target=_blank, rel=noopener noreferrer and the right href. Oakrange shows Website and Customer portal parts, a portal screenshot and 2 links (oakrange.com, oakrangeportal.co.uk/login). 390x844 touch: 3D renders, scrollWidth 390, no elements overflow, labels change, 4 cards and all images load. WORK /work: work-portfolio has 9 cards, each wrapped in id=project-<id>, no broken images, scrollWidth 1440 (390 on mobile). Habesha and Hana show 'Related publishing work' links (#project-hana / #project-habesha); clicking sets the hash and scrolls to the anchor. REDUCED MOTION 1440 and 390: data-render=poster, no canvas, the poster SVG includes /work/nicola-d.webp and /work/pilates-m.webp, and Marketing mode works. META: og:image = <origin>/og-image.jpg, og:image:alt/width/height present, twitter:card summary_large_image, twitter:image(+alt), only one og:image tag, robots noindex on preview. /og-image.jpg is image/jpeg 1200x630; /brand/email-wordmark-white.png is 200 PNG (360x61). EMAILS (rendered offline from notify.py, not sent): both have the wordmark header; the founder email has the 'Open lead in dashboard' link to APP_URL/founder/leads/<id>; the visitor email has the reference and 'What happens next', with no dashboard link; HTML is escaped; both pass _assert_safe_email. QUOTE: home-request-quote-btn → /quote, the wizard completed with Website Design & Development, reference AZM-261119-MAQR shown. The admin UI (Clerk ticket sign-in) lead detail lead-delivery showed founder notification (test) sent and visitor acknowledgment (test) sent. The lead was then deleted by id with its 2 outbox rows. REGRESSION: /services/ai-appointment-booking → service-request-quote-btn → /quote?service=ai_booking with AI Appointment Booking checked. test_adzen_api.py 22/22 passed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Work portfolio anchors", "issue": "After a 'Related publishing work' jump, the target's top lands at 0, under the 64px sticky header, so the top of the screenshot is hidden. Add scroll-margin-top (e.g. scroll-mt-24) to the #project-<id> wrappers.", "selector": "#project-hana, #project-habesha", "priority": "LOW"},
+      {"component": "Work page deep link", "issue": "Loading /work#project-hana directly does not scroll to the anchor (scrollY stays 0; the element is at 4009px). The SPA scroll-to-top or a late render overrides the hash. Shared links to a project will not land on it.", "selector": "#project-hana", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Work portfolio", "issues": ["Habesha Press and Hana the Hyena sit side by side in the same 2-col row at desktop, so the cross-link jump barely moves the page. Acceptable, but the related link mostly helps on mobile.", "Every card's link reads 'Visit site'. aria-labels tell them apart (good), but sighted users of the Oakrange two-part card see two identical 'Visit site' links. Consider 'Visit portal'."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_brand_assets_emails.py", "/app/backend/tests/test_adzen_api.py", "/app/backend/tests/clerk_ticket.py", "/app/backend/tests/verify_hero_lead.py", "/app/test_reports/pytest/iteration4_assets_emails.xml"],
+  "action_items": [
+    "(LOW) Add scroll-margin-top to the #project-<id> wrappers on /work so anchor jumps clear the sticky header",
+    "(LOW) Handle the location.hash on /work load (scroll to the element after render) so /work#project-<id> deep links work"
+  ],
+  "critical_code_review_comments": [
+    "Seo.jsx sets og:image to window.location.origin on non-canonical hosts. Fine for preview, but social crawlers don't run JS, so they only see the static index.html tags (adzenmedia.com/og-image.jpg). That is correct for production.",
+    "ReviewNote text says screenshots are hidden on adzenmedia.com, but showPortfolio() also returns true when PORTFOLIO_APPROVED. When approval flips, the note would still render on preview hosts. Gate the note on !PORTFOLIO_APPROVED.",
+    "The email wordmark is 360x61 but rendered at 180x30 (ratio 6.0 vs 5.9), a negligible squash. height=31 or a 360x60 asset would be exact.",
+    "The founder email dashboard link uses APP_URL (currently the cc90a1ee preview host). Make sure production APP_URL is https://adzenmedia.com, or the link and logo point at preview."
+  ],
+  "updated_files": ["/app/backend/tests/test_brand_assets_emails.py", "/app/backend/tests/clerk_ticket.py"],
+  "success_rate": {"backend": "100% (14/14 new + 22/22 regression)", "frontend": "100% of requested checks (2 low-priority anchor UX issues)"},
+  "seed_data_creation": "One UI quote lead AZM-261119-MAQR (TEST_ Iter4 Quote), deleted by id with its 2 outbox rows. Pre-existing leads left untouched: Test User AZM-261118-VKA9, Self Test AZM-261119-VN8K, TEST Meta Sample AZM-261119-MV2G, TEST Email Preview AZM-261119-FN2L.",
+  "test_credentials": "Used founder+clerk_test@example.com (admin) via Clerk sign_in_tokens (tests/clerk_ticket.py prints a ticket → /sign-in?__clerk_ticket=...).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Use wait_until='load' and wait 5s on '/'. Open portfolio sections only on non-adzenmedia.com hosts. Project cards: project-card-<id>, wrappers id=project-<id> on /work. Quote wizard: click [data-testid^=quote-service-option-] with the text, fill quote-goal, click the first label in each fieldset of quote-section-website, then Continue x2, then quote-name/email/company, then submit → lead-reference. Delete via tests/verify_hero_lead.py <REF> --delete. Lead detail delivery card: lead-delivery / email-status-<kind>. test_brand_assets_emails.py renders emails offline (no send)."
+}
