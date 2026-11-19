@@ -52,6 +52,12 @@ const DEMOS = [
 
 export function WorkPage() {
   const [items, setItems] = useState([]);
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return undefined;
+    const t = setTimeout(() => document.getElementById(id)?.scrollIntoView(), 400);
+    return () => clearTimeout(t);
+  }, []);
   useEffect(() => { api.get("/public/case-studies").then((r) => setItems(r.data.items)).catch(() => {}); }, []);
   return (
     <>
@@ -64,7 +70,7 @@ export function WorkPage() {
           <h2 className="font-display text-3xl sm:text-5xl font-bold tracking-[-0.02em] mb-6">Portfolio</h2>
           <ReviewNote />
           <div className="mt-12 grid md:grid-cols-2 gap-x-10 gap-y-20">
-            {PROJECTS.map((p) => <div key={p.id} id={`project-${p.id}`} className={p.parts ? "md:col-span-2" : ""}><ProjectCard p={p} large={!!p.parts} /></div>)}
+            {PROJECTS.map((p) => <div key={p.id} id={`project-${p.id}`} className={`scroll-mt-24 ${p.parts ? "md:col-span-2" : ""}`}><ProjectCard p={p} large={!!p.parts} /></div>)}
           </div>
         </section>
       )}

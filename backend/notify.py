@@ -157,11 +157,11 @@ def founder_email(lead: dict) -> tuple[str, str]:
     subject = f"New {lead['channel_label']} · {lead['reference']} · {c.get('company') or c.get('name')}"
     inner = (f'<p style="font-size:13px;color:#2D4BFF;font-weight:bold">{escape(lead["reference"])}</p>'
              f'<h2 style="margin:0 0 12px">{escape(lead["brief"]["headline"])}</h2>'
-             f'<p><strong>{escape(c.get("name", ""))}</strong>, {escape(c.get("company", ""))}<br>'
-             f'{escape(c.get("email", ""))} {escape(c.get("phone", ""))}<br>{escape(c.get("country", ""))}</p>'
+             f'<p><strong>{escape(c.get("name") or "")}</strong>, {escape(c.get("company") or "")}<br>'
+             f'{escape(c.get("email") or "")} {escape(c.get("phone") or "")}<br>{escape(c.get("country") or "")}</p>'
              f'{_brief_rows(lead)}'
-             f'<p style="color:#555;font-size:13px">Source: {escape(lead.get("source", ""))} · Landing page: '
-             f'{escape(lead.get("attribution", {}).get("landing_page", ""))}</p>'
+             f'<p style="color:#555;font-size:13px">Source: {escape(lead.get("source") or "")} · Landing page: '
+             f'{escape((lead.get("attribution") or {}).get("landing_page") or "")}</p>'
              + (f'<p style="margin-top:22px"><a href="{escape(site)}/founder/leads/{escape(lead["id"])}" '
                 'style="background:#2D4BFF;color:#ffffff;padding:12px 20px;border-radius:999px;text-decoration:none;'
                 'font-weight:bold;display:inline-block">Open lead in dashboard</a></p>'
@@ -213,7 +213,13 @@ async def _process(job: dict) -> None:
     if not lead:
         await db.email_outbox.update_one({"id": job["id"]}, {"$set": {"status": "failed", "last_error": "lead missing"}})
         return
-    subject, html = (founder_email if job["kind"] == "founder_notification" else visitor_email)(lead)
+    try:
+        subject, html = (founder_email if job["kind"] == "founder_notification" else visitor_email)(lead)
+    except Exception as e:  # a template error must not leave the job stuck in "sending"
+        await db.email_outbox.update_one({"id": job["id"]}, {"$set": {
+            "status": "failed", "last_error": f"template: {type(e).__name__}"[:300], "updated_at": iso()}})
+        logger.error("email template %s %s: %s", job["kind"], job["lead_id"], e)
+        return
     to = job["intended_to"] if job["mode"] == "live" else TEST_RECIPIENT
     attempts = job["attempts"] + 1
     try:

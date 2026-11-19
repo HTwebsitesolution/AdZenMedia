@@ -1,9 +1,9 @@
 import { ArrowUpRight } from "lucide-react";
 import { PROJECTS } from "@/lib/content";
 
-const Visit = ({ url, name }) => (
+const Visit = ({ url, name, text = "Visit site" }) => (
   <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold text-[#2247FF] hover:underline" aria-label={`Visit ${name} (opens in a new tab)`}>
-    Visit site <ArrowUpRight size={14} aria-hidden />
+    {text} <ArrowUpRight size={14} aria-hidden />
   </a>
 );
 
@@ -30,7 +30,7 @@ export const ProjectCard = ({ p, large }) => {
                 <p className="font-semibold">{x.title}</p>
                 <p className="text-sm text-[#565a63] mt-1">{x.text}</p>
                 {x.shot && <img src={`/work/${x.shot}-d.webp`} alt="Oakrange customer portal public login screen" loading="lazy" className="mt-3 rounded-lg border border-black/10 aspect-[16/10] object-cover object-top" />}
-                <div className="mt-2"><Visit url={x.url} name={`Oakrange ${x.title}`} /></div>
+                <div className="mt-2"><Visit url={x.url} name={`Oakrange ${x.title}`} text={x.shot ? "Visit portal" : "Visit site"} /></div>
               </div>
             ))}
           </div>
