@@ -52,6 +52,11 @@ FastAPI (core, catalog, leads, notify, voice, admin, auth_admin, content) + Mong
 - Fixed: the founder email crashed when a lead had no landing page, and a crashed template now marks the job failed instead of leaving it stuck
 - OG image /og-image.jpg (1200x630) plus og/twitter tags with alt text; index.html has static production tags
 
+## Revision 6 (2026-06): portfolio approved; production email pending first deploy
+- PORTFOLIO_APPROVED=true; labels: Boilable and Anto "Client project", Habesha Press "Publishing collaboration", Hana the Hyena "Co-created project"; clean portal capture captioned "Public sign-in page"
+- Test leads: "[TEST]" in the goal, message or name sets is_test automatically, and there's an admin toggle; test leads are left out of reports and CSV
+- Deployer check: the app has NEVER been deployed, so there is no production URL, no adzenmedia.com connection and no production secrets yet. Live email verification is blocked until the first deploy, then live slots EMAIL_MODE=live, APP_URL=https://adzenmedia.com, SITE_URL=https://adzenmedia.com and SEED_SAMPLE_LEADS=false, and the domain is connected
+
 ## Backlog
 - P0 (owner inputs): contact details, WhatsApp number, booking link, availability, Retell keys/agent, Formspree form, approved case studies & screenshots, budget ranges, privacy review, domain
 - P1: Calendar provider webhook for verified bookings; country pages when demand justifies
