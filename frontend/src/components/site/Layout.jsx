@@ -13,9 +13,9 @@ const NAV = [
 ];
 
 const Logo = ({ light }) => (
-  <Link to="/" aria-label="AdZenMedia home" className={`flex items-center gap-2 font-display font-extrabold tracking-tight text-xl ${light ? "text-[#F4F1EA]" : ""}`} data-testid="nav-logo">
-    <span className="grid place-items-center w-8 h-8 rounded-lg bg-[#2247FF] text-white text-sm">A</span>
-    <span className="hidden min-[400px]:inline">AdZenMedia</span>
+  <Link to="/" aria-label="AdZenMedia home" className="flex items-center shrink-0" data-testid="nav-logo">
+    <img src="/favicon.svg" alt="" width="32" height="32" className="w-8 h-8 min-[420px]:hidden" />
+    <img src={`/brand/adzenmedia-horizontal-${light ? "white" : "charcoal"}.svg`} alt="AdZenMedia" width="148" height="25" className="hidden min-[420px]:block h-6 w-auto" />
   </Link>
 );
 

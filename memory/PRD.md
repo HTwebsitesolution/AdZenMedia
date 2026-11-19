@@ -38,6 +38,12 @@ FastAPI (core, catalog, leads, notify, voice, admin, auth_admin, content) + Mong
 - Before/after evidence in /app/docs/evidence/hero-depth
 - The Orvante monochrome redesign was NOT done: the specification never arrived, and the same message also approved keeping the current design
 
+## Revision 4 (2026-06): brand logo kit
+- Owner's logo kit is in /frontend/public/brand. The header and footer use the horizontal logo (white on dark, charcoal on light, the mark alone under 420px); the favicon is now .ico + .svg
+- Logo shown on the 3D browser screen and on the phone ad screen (mark + wordmark), and in the reduced-motion poster
+- Before/after hero comparison images in /app/docs/evidence/hero-depth/compare_*.jpg; the hero depth experiment stays live, and checkpoint tag `checkpoint-before-hero-depth` is kept
+- Still waiting on: real project screenshots for the 3D screens, and the Orvante specification
+
 ## Backlog
 - P0 (owner inputs): contact details, WhatsApp number, booking link, availability, Retell keys/agent, Formspree form, approved case studies & screenshots, budget ranges, privacy review, domain
 - P1: Calendar provider webhook for verified bookings; country pages when demand justifies

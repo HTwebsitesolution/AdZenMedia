@@ -29,6 +29,27 @@ function slab(w, h, d, r, mat) {
   return m;
 }
 
+// Brand artwork from /public/brand, rasterised once into a texture.
+function svgPlane(url, w, h, M, key) {
+  const mat = new THREE.MeshStandardMaterial({ transparent: true, opacity: 0, roughness: 0.6 });
+  M[key] = mat;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas");
+    c.width = 1024;
+    c.height = Math.round((1024 * h) / w);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    mat.map = tex;
+    mat.opacity = 1;
+    mat.needsUpdate = true;
+  };
+  img.src = url;
+  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+}
+
 function at(mesh, x, y, z) {
   mesh.position.set(x, y, z);
   return mesh;
@@ -41,7 +62,7 @@ function buildObjects(M) {
   web.add(at(slab(3.4, 0.3, 0.04, 0.12, M.ink), 0, 0.98, 0.08));
   [-1.5, -1.36, -1.22].forEach((x, i) => web.add(at(new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.03, 16).rotateX(Math.PI / 2), i === 2 ? M.blue : M.line), x, 0.98, 0.12)));
   const blocks = [
-    at(slab(1.5, 0.22, 0.05, 0.05, M.ink), -0.85, 0.5, 0.1),
+    at(svgPlane("/brand/adzenmedia-horizontal-charcoal.svg", 1.45, 1.45 * (111 / 658), M, "logoWeb"), -0.86, 0.52, 0.11),
     at(slab(1.2, 0.1, 0.04, 0.04, M.line), -1.0, 0.25, 0.1),
     at(slab(1.2, 0.1, 0.04, 0.04, M.line), -1.0, 0.08, 0.1),
     at(slab(0.8, 0.26, 0.06, 0.13, M.blue), -1.2, -0.25, 0.12),
@@ -56,6 +77,8 @@ function buildObjects(M) {
   const ad = new THREE.Group();
   ad.add(slab(1.3, 2.4, 0.14, 0.22, M.inkDeep));
   ad.add(at(slab(1.12, 2.0, 0.03, 0.12, M.screen), 0, 0.04, 0.09));
+  ad.add(at(svgPlane("/brand/adzenmedia-favicon.svg", 0.24, 0.24, M, "logoAdMark"), -0.36, 0.82, 0.15));
+  ad.add(at(svgPlane("/brand/adzenmedia-horizontal-white.svg", 0.58, 0.58 * (111 / 658), M, "logoAdWord"), 0.1, 0.82, 0.15));
   const tri = new THREE.Shape();
   tri.moveTo(-0.14, -0.18); tri.lineTo(0.2, 0); tri.lineTo(-0.14, 0.18); tri.lineTo(-0.14, -0.18);
   const play = new THREE.Mesh(new THREE.ExtrudeGeometry(tri, { depth: 0.05, bevelEnabled: false }), M.paper);
@@ -310,7 +333,7 @@ export function createHeroScene(canvas, initialMode = "web") {
       area.removeEventListener("pointermove", onPointer);
       area.removeEventListener("pointerleave", onLeave);
       scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
-      Object.values(M).forEach((m) => m.dispose());
+      Object.values(M).forEach((m) => { m.map?.dispose(); m.dispose(); });
       renderer.dispose();
     },
   };
