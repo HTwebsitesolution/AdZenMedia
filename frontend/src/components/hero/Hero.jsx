@@ -109,8 +109,8 @@ export default function Hero() {
           <p className="text-sm text-[#F4F1EA]/80" aria-live="polite" data-testid="hero-mode-caption">
             {active.caption} <Link to={active.to} className="underline underline-offset-4 text-white">Explore</Link>
           </p>
-          {state === "3d" && (
-            <button type="button" onClick={() => setPaused(!paused)} className="sm:ml-auto inline-flex items-center gap-2 text-xs text-[#F4F1EA]/70 hover:text-white" aria-pressed={paused} data-testid="hero-pause-btn">
+          {use3D && state !== "poster" && (
+            <button type="button" onClick={() => setPaused(!paused)} disabled={state !== "3d"} className={`${state === "3d" ? "" : "invisible"} sm:ml-auto inline-flex items-center gap-2 text-xs text-[#F4F1EA]/70 hover:text-white`} aria-pressed={paused} data-testid="hero-pause-btn">
               {paused ? <Play size={14} /> : <Pause size={14} />} {paused ? "Play animation" : "Pause animation"}
             </button>
           )}

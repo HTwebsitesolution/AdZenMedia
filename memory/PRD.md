@@ -30,6 +30,14 @@ FastAPI (core, catalog, leads, notify, voice, admin, auth_admin, content) + Mong
 - Contact page in preview lists the channels still waiting for owner setup
 - Evidence screenshots saved in /app/docs/evidence
 
+## Revision 3 (2026-06): hero artwork depth experiment (awaiting owner review)
+- Checkpoint before the change: git tag `checkpoint-before-hero-depth` (fad1573)
+- heroScene.js: the selected object(s) move forward and the rest step back; one eased 0.8s transition per selection; pointer parallax only inside the artwork area and only for a mouse, settling when the pointer leaves; softer backdrop shadows
+- HeroPoster.jsx: the selected object is drawn on top with a stronger shadow; reduced motion switches instantly
+- Hero.jsx: the pause button's row is reserved, so the hero height doesn't change once the 3D scene loads
+- Before/after evidence in /app/docs/evidence/hero-depth
+- The Orvante monochrome redesign was NOT done: the specification never arrived, and the same message also approved keeping the current design
+
 ## Backlog
 - P0 (owner inputs): contact details, WhatsApp number, booking link, availability, Retell keys/agent, Formspree form, approved case studies & screenshots, budget ranges, privacy review, domain
 - P1: Calendar provider webhook for verified bookings; country pages when demand justifies
