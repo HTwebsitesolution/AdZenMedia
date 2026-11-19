@@ -89,3 +89,32 @@ export const LEGACY_SLUGS = {
   "customer-portal-software-discovery": "custom-software-portals-saas",
   "ai-training-for-teams": "ai-training-business-development",
 };
+
+// Portfolio: screenshots stay in the review preview until the owner approves publication.
+export const PORTFOLIO_APPROVED = false;
+export const showPortfolio = () => PORTFOLIO_APPROVED || window.location.hostname.replace(/^www\./, "") !== "adzenmedia.com";
+
+export const PROJECTS = [
+  { id: "nicola", name: "Inspired by Nicola", label: "Client website", featured: true, url: "https://www.inspiredbynicola.co.uk/",
+    text: "Website for a bespoke faux floral artist in England: wreaths, arrangements, wedding and venue installations, with a gallery and commission inquiries." },
+  { id: "pilates", name: "Pilates Barn", label: "Client website", featured: true, url: "https://www.pilates-barn.co.uk/",
+    text: "Website for a boutique reformer Pilates studio in Oldcotes, Worksop: classes, studio information, a waiting list and class booking." },
+  { id: "dala", name: "D.A. Language Academy", label: "Client website", featured: true, url: "https://www.dalanguageacademy.com/en",
+    text: "English and French website for a language academy in Niamey, Niger: CEFR programmes, UK coaching sessions and applications via WhatsApp." },
+  { id: "oakrange", name: "Oakrange", label: "Client website + customer portal", featured: true, url: "https://www.oakrange.com/",
+    text: "Engineering and calibration example, UK.",
+    parts: [
+      { title: "Website", text: "Website for a UK onsite calibration provider: services, industries served and quote requests.", url: "https://www.oakrange.com/" },
+      { title: "Customer portal", text: "Secure portal where customers sign in to find their calibration certificates. Only the public login screen is shown.", url: "https://www.oakrangeportal.co.uk/login", shot: "portal" },
+    ] },
+  { id: "lakeside", name: "Lakeside Fishery Ranskill", label: "Client website", url: "https://lakesidefisheryranskill.com/",
+    text: "Website for a family-run fishing complex in Ranskill, Nottinghamshire: six lakes, visitor information and bookings." },
+  { id: "boilable", name: "Boilable", label: "Project (relationship to confirm)", url: "https://www.boilable.co.uk/",
+    text: "Online boiler installation estimator: an estimate in about 60 seconds, with the final price confirmed after a free site survey." },
+  { id: "habesha", name: "Habesha Press", label: "Publishing brand (relationship to confirm)", url: "https://www.habeshapress.com/", related: "hana",
+    text: "Publishing house helping Ethiopian and Habesha indie authors with editing, design and self-publishing." },
+  { id: "hana", name: "Hana the Hyena", label: "Our own project · book brand", url: "https://hanathehyena.com/", related: "habesha",
+    text: "Official site for the children's book The Hyena Who Went To Dinner by Joseph Afolabi and Feven Teshome, with the story and free activities." },
+  { id: "anto", name: "Anto Shoes & Bag Boutique", label: "Client website (to confirm)", url: "https://www.antoboutique.fashion/",
+    text: "Website for a luxury shoe and handbag boutique in Kigali, Rwanda." },
+];

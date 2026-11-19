@@ -4,9 +4,9 @@ import { ArrowRight, Pause, Play } from "lucide-react";
 import { HeroPoster } from "./HeroPoster";
 
 export const MODES = [
-  { id: "web", label: "Web", caption: "Websites and landing pages that turn visits into inquiries.", to: "/services/website-design-development" },
-  { id: "marketing", label: "Marketing", caption: "Social video and Facebook & Instagram ads that bring in leads.", to: "/services/facebook-instagram-ads" },
-  { id: "ai", label: "AI", caption: "AI that replies to every lead and books the appointment.", to: "/services/ai-appointment-booking" },
+  { id: "web", label: "Web", caption: "Websites and landing pages that turn visits into inquiries.", tag: "On screen: Inspired by Nicola (client website)", to: "/services/website-design-development" },
+  { id: "marketing", label: "Marketing", caption: "Social video and Facebook & Instagram ads that bring in leads.", tag: "On screen: Pilates Barn site with a demo ad overlay", to: "/services/facebook-instagram-ads" },
+  { id: "ai", label: "AI", caption: "AI that replies to every lead and books the appointment.", tag: "Demo workflow, sample data", to: "/services/ai-appointment-booking" },
 ];
 
 function canRender3D() {
@@ -108,6 +108,7 @@ export default function Hero() {
           <ModeSwitch mode={mode} setMode={setMode} />
           <p className="text-sm text-[#F4F1EA]/80" aria-live="polite" data-testid="hero-mode-caption">
             {active.caption} <Link to={active.to} className="underline underline-offset-4 text-white">Explore</Link>
+            <span className="block text-xs text-[#F4F1EA]/55 mt-1" data-testid="hero-screen-label">{active.tag}</span>
           </p>
           {use3D && state !== "poster" && (
             <button type="button" onClick={() => setPaused(!paused)} disabled={state !== "3d"} className={`${state === "3d" ? "" : "invisible"} sm:ml-auto inline-flex items-center gap-2 text-xs text-[#F4F1EA]/70 hover:text-white`} aria-pressed={paused} data-testid="hero-pause-btn">

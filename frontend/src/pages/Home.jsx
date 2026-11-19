@@ -5,7 +5,8 @@ import { CtaBand, QuoteCta } from "@/components/site/Blocks";
 import Hero from "@/components/hero/Hero";
 import { LeadJourney } from "@/components/home/LeadJourney";
 import { BookingMock, BrowserMock, FlowMock, PortalMock, TrainingMock, VideoStrip } from "@/components/home/Mockups";
-import { SERVICES } from "@/lib/content";
+import { PROJECTS, SERVICES, showPortfolio } from "@/lib/content";
+import { ProjectCard, ReviewNote } from "@/components/home/ProjectCard";
 
 const ServiceIndex = () => (
   <section className="container-x py-16 lg:py-24" aria-labelledby="services-heading">
@@ -107,6 +108,19 @@ export default function Home() {
         </div>
         <div className="lg:col-span-5"><TrainingMock /></div>
       </section>
+
+      {showPortfolio() && (
+        <section className="container-x py-16 lg:py-24" data-testid="home-selected-work">
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
+            <h2 className="font-display text-4xl sm:text-6xl font-bold tracking-[-0.03em]">Selected work</h2>
+            <Link to="/work" className="text-[#2247FF] font-semibold inline-flex items-center gap-1" data-testid="home-work-link">Full portfolio <ArrowRight size={16} /></Link>
+          </div>
+          <ReviewNote />
+          <div className="mt-12 grid lg:grid-cols-2 gap-x-12 gap-y-20">
+            {PROJECTS.filter((p) => p.featured).map((p, i) => <div key={p.id} className={i % 2 ? "lg:mt-24" : ""}><ProjectCard p={p} /></div>)}
+          </div>
+        </section>
+      )}
 
       <section className="container-x py-12 lg:py-16 border-t border-black/15" data-testid="home-start">
         <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-[-0.02em]">How to start</h2>

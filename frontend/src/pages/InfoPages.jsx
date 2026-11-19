@@ -5,6 +5,8 @@ import { Seo } from "@/components/site/Seo";
 import { CtaBand, PageHero, QuoteCta, Section } from "@/components/site/Blocks";
 import { PortalMock } from "@/components/home/Mockups";
 import { api } from "@/lib/api";
+import { PROJECTS, showPortfolio } from "@/lib/content";
+import { ProjectCard, ReviewNote } from "@/components/home/ProjectCard";
 import { useConfig } from "@/lib/config";
 
 const INDUSTRY_PROBLEMS = [
@@ -33,7 +35,7 @@ export function IndustryPage() {
   );
 }
 
-const PROJECTS = [
+const PATTERNS = [
   { tag: "Custom software · UK", title: "Customer portal for a multi-site inspection and testing provider", visual: true,
     before: "Customers emailed the office for inspection reports and certificates across their sites.",
     lesson: "If your customers manage several locations, permissioned access to their own records removes a recurring office task and makes you easier to keep." },
@@ -57,8 +59,17 @@ export function WorkPage() {
       <PageHero eyebrow="Work" title="Projects, and what they teach.">
         Client names and full results are shared only with each client's approval. Demonstrations are labeled as such.
       </PageHero>
+      {showPortfolio() && (
+        <section className="container-x py-12" data-testid="work-portfolio">
+          <h2 className="font-display text-3xl sm:text-5xl font-bold tracking-[-0.02em] mb-6">Portfolio</h2>
+          <ReviewNote />
+          <div className="mt-12 grid md:grid-cols-2 gap-x-10 gap-y-20">
+            {PROJECTS.map((p) => <div key={p.id} id={`project-${p.id}`} className={p.parts ? "md:col-span-2" : ""}><ProjectCard p={p} large={!!p.parts} /></div>)}
+          </div>
+        </section>
+      )}
       <section className="container-x py-12 space-y-16">
-        {PROJECTS.map((p) => (
+        {PATTERNS.map((p) => (
           <article key={p.title} className="grid lg:grid-cols-12 gap-10 items-center" data-testid="work-pattern-card">
             <div className="lg:col-span-5">
               <p className="kicker">{p.tag}</p>

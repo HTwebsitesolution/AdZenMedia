@@ -15,18 +15,16 @@ export const HeroPoster = ({ mode }) => {
         <rect width="300" height="200" rx="14" fill={PAPER} />
         <rect width="300" height="28" rx="12" fill={INK} />
         <circle cx="18" cy="14" r="4" fill={LINE} /><circle cx="32" cy="14" r="4" fill={LINE} /><circle cx="46" cy="14" r="4" fill={BLUE} />
-        <image href="/brand/adzenmedia-horizontal-charcoal.svg" x="20" y="46" width="130" height="22" />
-        <rect x="20" y="76" width="110" height="8" rx="4" fill={LINE} /><rect x="20" y="92" width="100" height="8" rx="4" fill={LINE} />
-        <rect x="20" y="116" width="70" height="24" rx="12" fill={BLUE} />
-        <rect x="170" y="48" width="110" height="110" rx="8" fill={LINE} />
+        <image href="/work/nicola-d.webp" x="8" y="32" width="284" height="162" preserveAspectRatio="xMidYMin slice" />
+
       </g>
     ),
     marketing: (
       <g opacity={f("marketing")} filter={mode === "marketing" ? "url(#lift)" : "url(#sh)"} transform={mode === "marketing" ? "translate(250 70)" : "translate(440 210) scale(.75)"}>
         <rect width="120" height="220" rx="20" fill="#15171C" />
         <rect x="9" y="12" width="102" height="180" rx="12" fill="#1B2340" />
-        <image href="/brand/adzenmedia-favicon.svg" x="16" y="20" width="16" height="16" />
-        <image href="/brand/adzenmedia-horizontal-white.svg" x="38" y="23" width="56" height="10" />
+        <image href="/work/pilates-m.webp" x="9" y="12" width="102" height="180" preserveAspectRatio="xMidYMin slice" />
+        <rect x="16" y="20" width="44" height="12" rx="6" fill={PAPER} /><text x="38" y="29" fontSize="7" fontWeight="700" textAnchor="middle" fill={INK}>DEMO AD</text>
         <path d="M50 70 L80 88 L50 106 Z" fill={PAPER} />
         <rect x="20" y="140" width="80" height="4" rx="2" fill={INK} /><rect x="20" y="140" width="34" height="4" rx="2" fill={BLUE} />
         <rect x="24" y="158" width="72" height="20" rx="10" fill={BLUE} />

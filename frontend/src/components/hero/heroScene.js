@@ -38,7 +38,10 @@ function svgPlane(url, w, h, M, key) {
     const c = document.createElement("canvas");
     c.width = 1024;
     c.height = Math.round((1024 * h) / w);
-    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    // Cover-crop from the top so screenshots keep their header visible.
+    const scale = Math.max(c.width / img.width, c.height / img.height);
+    const dw = img.width * scale;
+    c.getContext("2d").drawImage(img, (c.width - dw) / 2, 0, dw, img.height * scale);
     const tex = new THREE.CanvasTexture(c);
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = 4;
@@ -48,6 +51,26 @@ function svgPlane(url, w, h, M, key) {
   };
   img.src = url;
   return new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+}
+
+function labelPlane(text, w, h, M, key) {
+  const c = document.createElement("canvas");
+  c.width = 512;
+  c.height = Math.round((512 * h) / w);
+  const g = c.getContext("2d");
+  g.fillStyle = "#F4F1EA";
+  g.beginPath();
+  g.roundRect(0, 0, c.width, c.height, c.height / 2);
+  g.fill();
+  g.fillStyle = "#151619";
+  g.font = `700 ${Math.round(c.height * 0.5)}px Arial, sans-serif`;
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.fillText(text, c.width / 2, c.height / 2 + 2);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  M[key] = new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.6 });
+  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), M[key]);
 }
 
 function at(mesh, x, y, z) {
@@ -61,15 +84,8 @@ function buildObjects(M) {
   web.add(slab(3.4, 2.25, 0.12, 0.16, M.paper));
   web.add(at(slab(3.4, 0.3, 0.04, 0.12, M.ink), 0, 0.98, 0.08));
   [-1.5, -1.36, -1.22].forEach((x, i) => web.add(at(new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.03, 16).rotateX(Math.PI / 2), i === 2 ? M.blue : M.line), x, 0.98, 0.12)));
-  const blocks = [
-    at(svgPlane("/brand/adzenmedia-horizontal-charcoal.svg", 1.45, 1.45 * (111 / 658), M, "logoWeb"), -0.86, 0.52, 0.11),
-    at(slab(1.2, 0.1, 0.04, 0.04, M.line), -1.0, 0.25, 0.1),
-    at(slab(1.2, 0.1, 0.04, 0.04, M.line), -1.0, 0.08, 0.1),
-    at(slab(0.8, 0.26, 0.06, 0.13, M.blue), -1.2, -0.25, 0.12),
-    at(slab(1.3, 1.25, 0.06, 0.08, M.line), 0.8, 0.05, 0.1),
-    at(slab(0.95, 0.4, 0.05, 0.06, M.paperShade), -1.05, -0.75, 0.1),
-    at(slab(1.3, 0.4, 0.05, 0.06, M.paperShade), 0.8, -0.75, 0.1),
-  ];
+  // Client work on screen: Inspired by Nicola (desktop capture)
+  const blocks = [at(svgPlane("/work/nicola-d.webp", 3.24, 1.84, M, "shotWeb"), 0, -0.12, 0.1)];
   blocks.forEach((b) => web.add(b));
   web.userData.blocks = blocks;
 
@@ -77,17 +93,18 @@ function buildObjects(M) {
   const ad = new THREE.Group();
   ad.add(slab(1.3, 2.4, 0.14, 0.22, M.inkDeep));
   ad.add(at(slab(1.12, 2.0, 0.03, 0.12, M.screen), 0, 0.04, 0.09));
-  ad.add(at(svgPlane("/brand/adzenmedia-favicon.svg", 0.24, 0.24, M, "logoAdMark"), -0.36, 0.82, 0.15));
-  ad.add(at(svgPlane("/brand/adzenmedia-horizontal-white.svg", 0.58, 0.58 * (111 / 658), M, "logoAdWord"), 0.1, 0.82, 0.15));
+  // Client work on screen: Pilates Barn (mobile capture); the ad overlay is a labeled demo
+  ad.add(at(svgPlane("/work/pilates-m.webp", 1.06, 1.94, M, "shotAd"), 0, 0.04, 0.13));
+  ad.add(at(labelPlane("DEMO AD", 0.5, 0.13, M, "demoLabel"), -0.24, 0.86, 0.16));
   const tri = new THREE.Shape();
   tri.moveTo(-0.14, -0.18); tri.lineTo(0.2, 0); tri.lineTo(-0.14, 0.18); tri.lineTo(-0.14, -0.18);
   const play = new THREE.Mesh(new THREE.ExtrudeGeometry(tri, { depth: 0.05, bevelEnabled: false }), M.paper);
-  ad.add(at(play, 0, 0.35, 0.1));
-  ad.add(at(slab(0.9, 0.04, 0.02, 0.02, M.ink), 0, -0.45, 0.11));
+  ad.add(at(play, 0, 0.35, 0.16));
+  ad.add(at(slab(0.9, 0.04, 0.02, 0.02, M.ink), 0, -0.45, 0.16));
   const fill = slab(0.9, 0.045, 0.025, 0.02, M.blue);
   fill.geometry.translate(0.45, 0, 0);
-  ad.add(at(fill, -0.45, -0.45, 0.12));
-  const pill = at(slab(0.8, 0.22, 0.06, 0.11, M.blueGlow), 0, -0.78, 0.12);
+  ad.add(at(fill, -0.45, -0.45, 0.17));
+  const pill = at(slab(0.8, 0.22, 0.06, 0.11, M.blueGlow), 0, -0.78, 0.17);
   ad.add(pill);
   ad.userData = { fill, pill };
 

@@ -127,11 +127,20 @@ async def _send(to: str, subject: str, html: str) -> str:
 
 
 # ---------- templates (server-side only) ----------
+def app_url() -> str:
+    return (env("APP_URL") or env("SITE_URL")).rstrip("/")
+
+
 def _wrap(inner: str) -> str:
     brand = escape(env("EMAIL_FROM_NAME") or "AdZenMedia")
-    return ('<table role="presentation" width="100%" style="background:#f4f5f7"><tr><td style="padding:24px">'
+    logo = f"{app_url()}/brand/email-wordmark-white.png"
+    header = ('<tr><td style="background:#151619;padding:22px 28px;border-radius:8px 8px 0 0">'
+              f'<img src="{escape(logo)}" width="180" height="30" alt="AdZenMedia" '
+              'style="display:block;border:0;color:#ffffff;font-family:Arial,sans-serif;font-size:22px;'
+              'font-weight:bold;line-height:30px"></td></tr>') if logo.startswith("https://") else ""
+    return ('<table role="presentation" width="100%" style="background:#f4f1ea"><tr><td style="padding:24px">'
             '<table role="presentation" width="600" style="max-width:600px;background:#ffffff;border-radius:8px">'
-            f'<tr><td style="padding:28px;font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#111">'
+            f'{header}<tr><td style="padding:28px;font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#151619">'
             f'{inner}<p style="font-size:12px;color:#777;margin-top:28px">Sent by {brand}. '
             'We never ask for passwords or payment details by email.</p></td></tr></table></td></tr></table>')
 
@@ -144,16 +153,19 @@ def _brief_rows(lead: dict) -> str:
 
 def founder_email(lead: dict) -> tuple[str, str]:
     c = lead["contact"]
-    site = env("SITE_URL")
+    site = app_url()
     subject = f"New {lead['channel_label']} · {lead['reference']} · {c.get('company') or c.get('name')}"
     inner = (f'<p style="font-size:13px;color:#b45309;font-weight:bold">{escape(lead["reference"])}</p>'
              f'<h2 style="margin:0 0 12px">{escape(lead["brief"]["headline"])}</h2>'
              f'<p><strong>{escape(c.get("name", ""))}</strong>, {escape(c.get("company", ""))}<br>'
              f'{escape(c.get("email", ""))} {escape(c.get("phone", ""))}<br>{escape(c.get("country", ""))}</p>'
              f'{_brief_rows(lead)}'
-             f'<p style="color:#555">Source: {escape(lead.get("source", ""))} · Landing page: '
+             f'<p style="color:#555;font-size:13px">Source: {escape(lead.get("source", ""))} · Landing page: '
              f'{escape(lead.get("attribution", {}).get("landing_page", ""))}</p>'
-             + (f'<p><a href="{escape(site)}/founder/leads/{escape(lead["id"])}">Open in dashboard</a></p>'
+             + (f'<p style="margin-top:22px"><a href="{escape(site)}/founder/leads/{escape(lead["id"])}" '
+                'style="background:#2D4BFF;color:#ffffff;padding:12px 20px;border-radius:999px;text-decoration:none;'
+                'font-weight:bold;display:inline-block">Open lead in dashboard</a></p>'
+                '<p style="font-size:12px;color:#777">Sign-in required. Lead details stay in the dashboard.</p>'
                 if site.startswith("https://") else ""))
     return subject, _wrap(inner)
 
@@ -163,13 +175,18 @@ def visitor_email(lead: dict) -> tuple[str, str]:
     kind = "quote request" if lead["channel"] == "quote_wizard" else "message"
     subject = f"We received your {kind} ({lead['reference']})"
     inner = (f'<p>Hi {escape(c.get("name", "").split(" ")[0])},</p>'
-             f'<p>Thanks for contacting AdZenMedia. Your {kind} is saved under reference '
-             f'<strong>{escape(lead["reference"])}</strong>.</p>'
-             '<p>Joseph will review it personally and reply by email. If you write back, please keep the '
-             'reference in the subject line.</p>'
-             + ('<p>This is a request for a scoped quote. No price, delivery date or commitment has been made yet.</p>'
-                if lead["channel"] == "quote_wizard" else "")
-             + f'<p style="color:#555">Summary you sent:</p>{_brief_rows(lead)}')
+             f'<p>Thanks for contacting AdZenMedia. Your {kind} is saved.</p>'
+             '<p style="margin:18px 0;padding:16px 18px;background:#f4f1ea;border-radius:8px">'
+             '<span style="font-size:12px;color:#555;display:block">Your reference</span>'
+             f'<strong style="font-size:22px;letter-spacing:1px">{escape(lead["reference"])}</strong></p>'
+             '<p style="font-weight:bold;margin-bottom:6px">What happens next</p>'
+             '<ol style="margin-top:0;padding-left:20px">'
+             '<li>Joseph reviews your request personally.</li>'
+             '<li>He replies by email, usually with a few questions or an offer of a short call.</li>'
+             '<li>You receive a written scope and quote. Nothing is committed until you agree.</li></ol>'
+             '<p>If you reply to this email, keep the reference in the subject line.</p>'
+             + ('<p style="font-size:13px;color:#555">This is a request for a scoped quote. No price, delivery date '
+                'or commitment has been made yet.</p>' if lead["channel"] == "quote_wizard" else ""))
     return subject, _wrap(inner)
 
 
